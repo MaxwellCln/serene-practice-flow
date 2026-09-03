@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+
 import { site } from "@/content/site";
 
 export function SiteFooter() {
@@ -8,6 +10,17 @@ export function SiteFooter() {
         <p>
           {site.credentials} · {site.location} · {site.email}
         </p>
+        <nav className="flex flex-wrap gap-5">
+          <Link to="/faqs" className="transition-colors hover:text-foreground">
+            FAQs
+          </Link>
+          <Link to="/resources" className="transition-colors hover:text-foreground">
+            Books &amp; resources
+          </Link>
+          <Link to="/workshops" className="transition-colors hover:text-foreground">
+            Workshops &amp; speaking
+          </Link>
+        </nav>
         <p className="max-w-2xl">{site.legal.crisisNote}</p>
         <p className="pt-2 text-xs">
           © {new Date().getFullYear()} {site.practiceName}. All rights reserved.
