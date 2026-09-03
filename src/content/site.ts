@@ -78,6 +78,79 @@ export const site = {
     },
   ],
 
+  /** Extra pages linked from the "More" menu in the navigation. */
+  faqPage: {
+    heading: "Questions, answered",
+    intro: "A little more detail on how sessions work. If something isn't here, just ask.",
+    extra: [
+      {
+        q: "Do you offer evening appointments?",
+        a: "A small number of later slots open up each term. Ask on our intro call and I'll let you know what's free.",
+      },
+      {
+        q: "Can I claim back the cost?",
+        a: "Some health insurers reimburse part of the fee for accredited psychotherapy. I can provide receipts on request.",
+      },
+      {
+        q: "What happens in the first session?",
+        a: "Mostly listening. We talk about what's brought you here, agree how we'll work, and answer any practical questions.",
+      },
+    ],
+  },
+
+  resources: {
+    heading: "Books & resources",
+    intro:
+      "A short, unhurried list I often share with clients. Nothing here replaces therapy — they're simply good companions.",
+    groups: [
+      {
+        title: "Anxiety & the nervous system",
+        items: [
+          { title: "When the Body Says No", author: "Gabor Maté", note: "On stress, boundaries and the body." },
+          { title: "Unwinding Anxiety", author: "Judson Brewer", note: "Practical, kind and habit-focused." },
+        ],
+      },
+      {
+        title: "Grief & change",
+        items: [
+          { title: "The Year of Magical Thinking", author: "Joan Didion", note: "Grief, told plainly." },
+          { title: "Transitions", author: "William Bridges", note: "Useful when a life stage is ending." },
+        ],
+      },
+      {
+        title: "Support in Ireland",
+        items: [
+          { title: "Samaritans — 116 123", author: "Free, 24 hours", note: "For any moment that feels too much." },
+          { title: "IACP.ie", author: "Irish Association for Counselling and Psychotherapy", note: "Find an accredited therapist." },
+        ],
+      },
+    ],
+  },
+
+  workshops: {
+    heading: "Workshops & speaking",
+    intro:
+      "Alongside clinical work I run small group workshops and speak to teams and training groups. Sessions are practical, evidence-based and never a sales pitch.",
+    offerings: [
+      {
+        title: "Burnout at work",
+        format: "90 minutes · in person or online",
+        body: "For teams noticing exhaustion and slipping boundaries. What burnout actually is, and what helps.",
+      },
+      {
+        title: "Supporting an anxious colleague or friend",
+        format: "Half day · small groups",
+        body: "How to listen well, when to worry, and how to hold your own limits while helping.",
+      },
+      {
+        title: "Talks & training groups",
+        format: "By arrangement",
+        body: "Guest lectures and CPD sessions for trainee therapists, schools and community organisations.",
+      },
+    ],
+    cta: "Enquiries are welcome by email — a line or two about your group is plenty.",
+  },
+
   contact: {
     heading: "Still deciding?",
     body: "A short email is a perfectly good place to start. I reply within two working days.",
