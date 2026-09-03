@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+
 import { site } from "@/content/site";
 
 export function SiteFooter() {
