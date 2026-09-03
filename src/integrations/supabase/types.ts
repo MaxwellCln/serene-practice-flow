@@ -14,7 +14,110 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          amount_cents: number
+          client_email: string
+          client_name: string
+          client_phone: string | null
+          created_at: string
+          currency: string
+          duration_minutes: number
+          id: string
+          notes: string | null
+          payment_reference: string | null
+          payment_status: string
+          service_id: string
+          starts_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents?: number
+          client_email: string
+          client_name: string
+          client_phone?: string | null
+          created_at?: string
+          currency?: string
+          duration_minutes?: number
+          id?: string
+          notes?: string | null
+          payment_reference?: string | null
+          payment_status?: string
+          service_id: string
+          starts_at: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          client_email?: string
+          client_name?: string
+          client_phone?: string | null
+          created_at?: string
+          currency?: string
+          duration_minutes?: number
+          id?: string
+          notes?: string | null
+          payment_reference?: string | null
+          payment_status?: string
+          service_id?: string
+          starts_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      services: {
+        Row: {
+          created_at: string
+          currency: string
+          description: string
+          duration_minutes: number
+          id: string
+          is_active: boolean
+          price_cents: number
+          requires_payment: boolean
+          slug: string
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          description?: string
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          price_cents?: number
+          requires_payment?: boolean
+          slug: string
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          description?: string
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          price_cents?: number
+          requires_payment?: boolean
+          slug?: string
+          sort_order?: number
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
