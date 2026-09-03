@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BookRouteImport } from './routes/book'
+import { Route as FaqsRouteImport } from './routes/faqs'
 import { Route as BookingIdRouteImport } from './routes/booking.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -23,6 +24,11 @@ const BookRoute = BookRouteImport.update({
   path: '/book',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FaqsRoute = FaqsRouteImport.update({
+  id: '/faqs',
+  path: '/faqs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BookingIdRoute = BookingIdRouteImport.update({
   id: '/booking/$id',
   path: '/booking/$id',
@@ -32,30 +38,34 @@ const BookingIdRoute = BookingIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/book': typeof BookRoute
+  '/faqs': typeof FaqsRoute
   '/booking/$id': typeof BookingIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/book': typeof BookRoute
+  '/faqs': typeof FaqsRoute
   '/booking/$id': typeof BookingIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/book': typeof BookRoute
+  '/faqs': typeof FaqsRoute
   '/booking/$id': typeof BookingIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/book' | '/booking/$id'
+  fullPaths: '/' | '/book' | '/faqs' | '/booking/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/book' | '/booking/$id'
-  id: '__root__' | '/' | '/book' | '/booking/$id'
+  to: '/' | '/book' | '/faqs' | '/booking/$id'
+  id: '__root__' | '/' | '/book' | '/faqs' | '/booking/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BookRoute: typeof BookRoute
+  FaqsRoute: typeof FaqsRoute
   BookingIdRoute: typeof BookingIdRoute
 }
 
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/faqs': {
+      id: '/faqs'
+      path: '/faqs'
+      fullPath: '/faqs'
+      preLoaderRoute: typeof FaqsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/booking/$id': {
       id: '/booking/$id'
       path: '/booking/$id'
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BookRoute: BookRoute,
+  FaqsRoute: FaqsRoute,
   BookingIdRoute: BookingIdRoute,
 }
 export const routeTree = rootRouteImport
