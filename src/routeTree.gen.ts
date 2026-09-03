@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as BookRouteImport } from './routes/book'
 import { Route as FaqsRouteImport } from './routes/faqs'
 import { Route as ResourcesRouteImport } from './routes/resources'
+import { Route as WorkshopsRouteImport } from './routes/workshops'
 import { Route as BookingIdRouteImport } from './routes/booking.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +36,11 @@ const ResourcesRoute = ResourcesRouteImport.update({
   path: '/resources',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WorkshopsRoute = WorkshopsRouteImport.update({
+  id: '/workshops',
+  path: '/workshops',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BookingIdRoute = BookingIdRouteImport.update({
   id: '/booking/$id',
   path: '/booking/$id',
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/book': typeof BookRoute
   '/faqs': typeof FaqsRoute
   '/resources': typeof ResourcesRoute
+  '/workshops': typeof WorkshopsRoute
   '/booking/$id': typeof BookingIdRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/book': typeof BookRoute
   '/faqs': typeof FaqsRoute
   '/resources': typeof ResourcesRoute
+  '/workshops': typeof WorkshopsRoute
   '/booking/$id': typeof BookingIdRoute
 }
 export interface FileRoutesById {
@@ -61,14 +69,23 @@ export interface FileRoutesById {
   '/book': typeof BookRoute
   '/faqs': typeof FaqsRoute
   '/resources': typeof ResourcesRoute
+  '/workshops': typeof WorkshopsRoute
   '/booking/$id': typeof BookingIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/book' | '/faqs' | '/resources' | '/booking/$id'
+  fullPaths:
+    '/' | '/book' | '/faqs' | '/resources' | '/workshops' | '/booking/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/book' | '/faqs' | '/resources' | '/booking/$id'
-  id: '__root__' | '/' | '/book' | '/faqs' | '/resources' | '/booking/$id'
+  to: '/' | '/book' | '/faqs' | '/resources' | '/workshops' | '/booking/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/book'
+    | '/faqs'
+    | '/resources'
+    | '/workshops'
+    | '/booking/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -76,6 +93,7 @@ export interface RootRouteChildren {
   BookRoute: typeof BookRoute
   FaqsRoute: typeof FaqsRoute
   ResourcesRoute: typeof ResourcesRoute
+  WorkshopsRoute: typeof WorkshopsRoute
   BookingIdRoute: typeof BookingIdRoute
 }
 
@@ -109,6 +127,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResourcesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/workshops': {
+      id: '/workshops'
+      path: '/workshops'
+      fullPath: '/workshops'
+      preLoaderRoute: typeof WorkshopsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/booking/$id': {
       id: '/booking/$id'
       path: '/booking/$id'
@@ -124,6 +149,7 @@ const rootRouteChildren: RootRouteChildren = {
   BookRoute: BookRoute,
   FaqsRoute: FaqsRoute,
   ResourcesRoute: ResourcesRoute,
+  WorkshopsRoute: WorkshopsRoute,
   BookingIdRoute: BookingIdRoute,
 }
 export const routeTree = rootRouteImport
