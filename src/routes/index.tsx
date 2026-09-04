@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, Mail, MapPin, Phone } from "lucide-react";
 
 import roomImage from "@/assets/room.jpg";
-import therapistImage from "@/assets/therapist.jpg";
+import therapistAsset from "@/assets/therapist.jpg.asset.json";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import {
