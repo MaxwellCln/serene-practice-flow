@@ -1,4 +1,6 @@
 import { Link } from "@tanstack/react-router";
+
+import { useSession } from "@/hooks/use-session";
 import { ChevronDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +25,8 @@ const moreLinks = [
 ] as const;
 
 export function SiteHeader() {
+  const { session } = useSession();
+
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
@@ -50,6 +54,9 @@ export function SiteHeader() {
           <div className="md:hidden">
             <MoreMenu />
           </div>
+          <Button asChild variant="ghost" size="sm" className="hidden rounded-full sm:inline-flex">
+            <Link to={session ? "/account" : "/auth"}>{session ? "My account" : "Sign in"}</Link>
+          </Button>
           <Button asChild size="sm" className="rounded-full px-5">
             <Link to="/book">Book</Link>
           </Button>
