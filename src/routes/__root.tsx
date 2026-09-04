@@ -78,15 +78,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Aoife Brennan Psychotherapy" },
+      { title: "Valerie O'Brien Quinn Psychotherapy" },
       {
         name: "description",
-        content: "Warm, confidential psychotherapy online and in Dublin. Book a session online.",
+        content: "Warm, confidential psychotherapy in Limerick City and online. Book a session online.",
       },
-      { property: "og:title", content: "Aoife Brennan Psychotherapy" },
+      { property: "og:title", content: "Valerie O'Brien Quinn Psychotherapy" },
       {
         property: "og:description",
-        content: "Warm, confidential psychotherapy online and in Dublin. Book a session online.",
+        content: "Warm, confidential psychotherapy in Limerick City and online. Book a session online.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

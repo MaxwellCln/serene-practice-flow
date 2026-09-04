@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, Mail, MapPin, Phone } from "lucide-react";
 
 import roomImage from "@/assets/room.jpg";
-import therapistImage from "@/assets/therapist.jpg";
+import therapistAsset from "@/assets/therapist.jpg.asset.json";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import {
@@ -20,10 +20,10 @@ export const Route = createFileRoute("/")({
   loader: () => listServices(),
   head: () => ({
     meta: [
-      { title: `${site.shortName} | Psychotherapy in ${site.location.split(",")[0]}` },
+      { title: `${site.shortName} | Psychotherapy in Limerick City & online` },
       {
         name: "description",
-        content: `${site.credentials} offering online and in-person therapy for anxiety, burnout and life transitions. Book a session in a few clicks.`,
+        content: `${site.credentials} offering therapy in Limerick City and online for anxiety, trauma, grief, relationship issues and burnout. Book a session in a few clicks.`,
       },
       { property: "og:title", content: `${site.practiceName}` },
       { property: "og:description", content: site.hero.body },
@@ -86,12 +86,12 @@ function Home() {
         <section id="about" className="border-y border-border bg-sand">
           <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-20 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)]">
             <img
-              src={therapistImage}
-              alt={`${site.shortName}, ${site.credentials}`}
+              src={therapistAsset.url}
+              alt={`${site.shortName}, ${site.credentials}, in a therapy session`}
               loading="lazy"
-              width={1008}
-              height={1264}
-              className="aspect-[4/5] w-full max-w-sm rounded-3xl object-cover"
+              width={1200}
+              height={800}
+              className="aspect-[3/2] w-full max-w-md rounded-3xl object-cover object-[center_25%] shadow-sm"
             />
             <div>
               <h2 className="text-3xl md:text-4xl">{site.about.heading}</h2>
@@ -110,6 +110,22 @@ function Home() {
               </ul>
             </div>
           </div>
+        </section>
+
+        {/* Reasons clients seek support */}
+        <section id="reasons" className="mx-auto max-w-6xl px-6 py-20">
+          <h2 className="text-3xl md:text-4xl">{site.reasons.heading}</h2>
+          <p className="mt-3 max-w-xl text-muted-foreground">{site.reasons.intro}</p>
+          <ul className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {site.reasons.items.map((item) => (
+              <li
+                key={item}
+                className="rounded-2xl border border-border bg-card px-5 py-4 text-sm leading-relaxed text-card-foreground"
+              >
+                {item}
+              </li>
+            ))}
+          </ul>
         </section>
 
         {/* Services */}

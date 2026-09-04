@@ -8,31 +8,54 @@
  */
 
 export const site = {
-  practiceName: "Aoife Brennan Psychotherapy",
-  shortName: "Aoife Brennan",
-  tagline: "Psychotherapy & counselling, online and in person",
-  credentials: "MIACP Accredited Psychotherapist",
-  location: "Dublin 6, Ireland",
+  practiceName: "Valerie O'Brien Quinn Psychotherapy",
+  shortName: "Valerie O'Brien Quinn",
+  tagline: "Psychotherapy & counselling in Limerick City and online",
+  credentials: "IAHIP Accredited Member",
+  location: "Limerick City and online · based in Clare",
   email: "hello@example-practice.ie",
-  phone: "+353 1 234 5678",
+  phone: "+353 87 292 9087",
+  language: "English",
   currency: "EUR",
   currencySymbol: "€",
 
   hero: {
     eyebrow: "Now accepting new clients",
     heading: "A steady place to think things through.",
-    body: "Warm, confidential therapy for anxiety, burnout and life transitions. Fifty minutes, entirely yours.",
+    body: "Warm, confidential therapy for anxiety, trauma, grief, relationship difficulties and life transitions. Sessions in Limerick City or online.",
     primaryCta: "Book a session",
     secondaryCta: "How it works",
   },
 
   about: {
-    heading: "Hello, I'm Aoife.",
+    heading: "Hello, I'm Valerie.",
     body: [
-      "I'm an IACP-accredited psychotherapist with twelve years' experience supporting adults through anxiety, grief, burnout and relationship difficulties.",
-      "My work is collaborative and unhurried. You set the pace; I bring curiosity, structure and a genuine belief that people change.",
+      "I'm an IAHIP-accredited psychotherapist based in Clare, offering sessions in Limerick City and online. I work with adults and adolescents around anxiety, trauma, abuse, grief, family-of-origin difficulties, relationship diversity, burnout and life transitions.",
+      "My approach is integrative, humanistic and collaborative. You set the pace; I bring curiosity, structure and a genuine belief that people can move through difficult experiences with support.",
     ],
-    points: ["MSc Integrative Psychotherapy", "IACP accredited & fully insured", "Online and Dublin-based sessions"],
+    points: [
+      "Masters in Integrative and Humanistic Psychotherapy",
+      "Masters in Adolescent Psychotherapy",
+      "MPhil, MA, MSc, MIAHIP",
+      "IAHIP Accredited Member",
+      "Sessions in Limerick City and online",
+    ],
+  },
+
+  reasons: {
+    heading: "Reasons clients seek support",
+    intro: "People come for many different reasons. Whatever has brought you here, we'll work with it together.",
+    items: [
+      "Abuse",
+      "Anxiety, stress, worry & panic attacks",
+      "Childhood & family-of-origin issues",
+      "Family issues",
+      "Grief, loss & bereavement",
+      "PTSD",
+      "Relationship diversity",
+      "Trauma",
+      "Work-related issues & burnout",
+    ],
   },
 
   approach: {
@@ -62,11 +85,11 @@ export const site = {
   faqs: [
     {
       q: "How long does therapy take?",
-      a: "Some people come for six sessions, others for a year. We review together regularly so it's always your choice.",
+      a: "Some people come for six sessions, others for a year or more. We review together regularly so it's always your choice.",
     },
     {
       q: "Are online sessions as effective?",
-      a: "Yes. Research shows online therapy works as well as in-person for most concerns, and many clients prefer it.",
+      a: "Yes. Research shows online therapy works as well as in-person for most concerns, and many clients prefer the flexibility.",
     },
     {
       q: "Is everything confidential?",
@@ -121,7 +144,7 @@ export const site = {
         title: "Support in Ireland",
         items: [
           { title: "Samaritans — 116 123", author: "Free, 24 hours", note: "For any moment that feels too much." },
-          { title: "IACP.ie", author: "Irish Association for Counselling and Psychotherapy", note: "Find an accredited therapist." },
+          { title: "IAHIP.ie", author: "Irish Association of Humanistic & Integrative Psychotherapy", note: "Find an accredited therapist." },
         ],
       },
     ],
@@ -153,7 +176,7 @@ export const site = {
 
   contact: {
     heading: "Still deciding?",
-    body: "A short email is a perfectly good place to start. I reply within two working days.",
+    body: "A short email or phone call is a perfectly good place to start. I reply within two working days.",
   },
 
   /** Weekly availability, 24h clock. Remove a day to close it. */
