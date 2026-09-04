@@ -20,10 +20,10 @@ export const Route = createFileRoute("/")({
   loader: () => listServices(),
   head: () => ({
     meta: [
-      { title: `${site.shortName} | Psychotherapy in ${site.location.split(",")[0]}` },
+      { title: `${site.shortName} | Psychotherapy in Limerick City & online` },
       {
         name: "description",
-        content: `${site.credentials} offering online and in-person therapy for anxiety, burnout and life transitions. Book a session in a few clicks.`,
+        content: `${site.credentials} offering therapy in Limerick City and online for anxiety, trauma, grief, relationship issues and burnout. Book a session in a few clicks.`,
       },
       { property: "og:title", content: `${site.practiceName}` },
       { property: "og:description", content: site.hero.body },
