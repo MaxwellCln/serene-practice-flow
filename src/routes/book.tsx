@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { site } from "@/content/site";
+import { useSession } from "@/hooks/use-session";
 import { createBooking, listAvailability, listServices } from "@/lib/booking.functions";
 import { startCheckout } from "@/lib/payments.functions";
 import { formatMoney, formatPracticeDate } from "@/lib/time";
@@ -58,6 +59,7 @@ function BookPage() {
   const { services, availability } = Route.useLoaderData();
   const search = Route.useSearch();
   const navigate = useNavigate();
+  const { session, loading: sessionLoading } = useSession();
   const submitBooking = useServerFn(createBooking);
   const openCheckout = useServerFn(startCheckout);
 
@@ -232,7 +234,29 @@ function BookPage() {
         )}
 
         {/* Step 3 — details */}
-        {service && slot && (
+        {service && slot && !session && !sessionLoading && (
+          <section className="mt-12 rounded-3xl border border-border bg-card p-8">
+            <h2 className="text-2xl">Sign in to confirm</h2>
+            <p className="mt-3 text-muted-foreground">
+              Bookings are held in a private client account, so your details and session history stay
+              secure. It takes a moment to create one.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button asChild className="rounded-full">
+                <Link to="/auth" search={{ mode: "signup", redirect: "/book" }}>
+                  Create an account
+                </Link>
+              </Button>
+              <Button asChild variant="secondary" className="rounded-full">
+                <Link to="/auth" search={{ mode: "signin", redirect: "/book" }}>
+                  Sign in
+                </Link>
+              </Button>
+            </div>
+          </section>
+        )}
+
+        {service && slot && session && (
           <section className="mt-12">
             <h2 className="text-2xl">Your details</h2>
             <p className="mt-2 text-sm text-muted-foreground">

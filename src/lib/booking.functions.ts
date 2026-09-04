@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { site } from "@/content/site";
 import { practiceDateKey, practiceTimeToUtc } from "@/lib/time";
 
@@ -48,6 +49,17 @@ export const listAvailability = createServerFn({ method: "GET" }).handler(
     if (error) throw new Error(error.message);
     const taken = new Set((booked ?? []).map((b) => new Date(b.starts_at as string).toISOString()));
 
+    const { data: blocks, error: blockError } = await supabaseAdmin
+      .from("availability_blocks")
+      .select("starts_at, ends_at")
+      .gte("ends_at", new Date(now).toISOString())
+      .lte("starts_at", horizonEnd.toISOString());
+    if (blockError) throw new Error(blockError.message);
+    const ranges = (blocks ?? []).map((b) => [
+      new Date(b.starts_at as string).getTime(),
+      new Date(b.ends_at as string).getTime(),
+    ]) as [number, number][];
+
     const days: DayAvailability[] = [];
     for (let i = 0; i <= site.availability.horizonDays; i++) {
       const day = new Date(now + i * 86_400_000);
@@ -58,7 +70,11 @@ export const listAvailability = createServerFn({ method: "GET" }).handler(
 
       const slots = rule.times
         .map((time) => ({ time, iso: practiceTimeToUtc(dateKey, time).toISOString() }))
-        .filter((s) => new Date(s.iso).getTime() > earliest && !taken.has(s.iso));
+        .filter((s) => {
+          const t = new Date(s.iso).getTime();
+          if (t <= earliest || taken.has(s.iso)) return false;
+          return !ranges.some(([start, end]) => t >= start && t < end);
+        });
 
       if (slots.length > 0) days.push({ date: dateKey, label: rule.label, slots });
     }
@@ -83,8 +99,9 @@ export type CreateBookingResult = {
 };
 
 export const createBooking = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => bookingInput.parse(data))
-  .handler(async ({ data }): Promise<CreateBookingResult> => {
+  .handler(async ({ data, context }): Promise<CreateBookingResult> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: service, error: serviceError } = await supabaseAdmin
@@ -93,7 +110,8 @@ export const createBooking = createServerFn({ method: "POST" })
       .eq("id", data.serviceId)
       .maybeSingle();
     if (serviceError) throw new Error(serviceError.message);
-    if (!service || !service.is_active) return { bookingId: "", requiresPayment: false, error: "That session type is no longer available." };
+    if (!service || !service.is_active)
+      return { bookingId: "", requiresPayment: false, error: "That session type is no longer available." };
 
     const startsAt = new Date(data.startsAt);
     if (Number.isNaN(startsAt.getTime())) {
@@ -103,10 +121,21 @@ export const createBooking = createServerFn({ method: "POST" })
       return { bookingId: "", requiresPayment: false, error: "That time is too soon — please choose a later slot." };
     }
 
+    const { data: blocked } = await supabaseAdmin
+      .from("availability_blocks")
+      .select("id")
+      .lte("starts_at", startsAt.toISOString())
+      .gt("ends_at", startsAt.toISOString())
+      .maybeSingle();
+    if (blocked) {
+      return { bookingId: "", requiresPayment: false, error: "That time is no longer available. Please pick another." };
+    }
+
     const { data: booking, error } = await supabaseAdmin
       .from("bookings")
       .insert({
         service_id: service.id,
+        user_id: context.userId,
         starts_at: startsAt.toISOString(),
         duration_minutes: service.duration_minutes,
         client_name: data.name,
@@ -128,16 +157,23 @@ export const createBooking = createServerFn({ method: "POST" })
       throw new Error(error.message);
     }
 
+    await supabaseAdmin
+      .from("profiles")
+      .update({ full_name: data.name, phone: data.phone || null })
+      .eq("id", context.userId);
+
     return { bookingId: booking.id as string, requiresPayment: Boolean(service.requires_payment) };
   });
 
 export const getBookingSummary = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
-  .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: booking, error } = await supabaseAdmin
+  .handler(async ({ data, context }) => {
+    const { data: booking, error } = await context.supabase
       .from("bookings")
-      .select("id, starts_at, duration_minutes, status, payment_status, amount_cents, currency, services(title)")
+      .select(
+        "id, starts_at, duration_minutes, status, payment_status, amount_cents, currency, services(title)",
+      )
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -153,4 +189,49 @@ export const getBookingSummary = createServerFn({ method: "GET" })
       serviceTitle:
         (booking as unknown as { services?: { title?: string } }).services?.title ?? "Session",
     };
+  });
+
+export type MyBooking = {
+  id: string;
+  startsAt: string;
+  durationMinutes: number;
+  status: string;
+  paymentStatus: string;
+  amountCents: number;
+  currency: string;
+  serviceTitle: string;
+};
+
+export const listMyBookings = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<MyBooking[]> => {
+    const { data, error } = await context.supabase
+      .from("bookings")
+      .select(
+        "id, starts_at, duration_minutes, status, payment_status, amount_cents, currency, services(title)",
+      )
+      .order("starts_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((b) => ({
+      id: b.id as string,
+      startsAt: b.starts_at as string,
+      durationMinutes: b.duration_minutes as number,
+      status: b.status as string,
+      paymentStatus: b.payment_status as string,
+      amountCents: b.amount_cents as number,
+      currency: b.currency as string,
+      serviceTitle: (b as unknown as { services?: { title?: string } }).services?.title ?? "Session",
+    }));
+  });
+
+export const cancelMyBooking = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("bookings")
+      .update({ status: "cancelled" })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });

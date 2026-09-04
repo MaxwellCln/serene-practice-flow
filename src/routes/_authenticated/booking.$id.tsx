@@ -10,7 +10,7 @@ import { getBookingSummary } from "@/lib/booking.functions";
 import { confirmCheckout } from "@/lib/payments.functions";
 import { formatMoney, formatPracticeDate, formatPracticeTime } from "@/lib/time";
 
-export const Route = createFileRoute("/booking/$id")({
+export const Route = createFileRoute("/_authenticated/booking/$id")({
   validateSearch: z.object({ session_id: z.string().optional(), cancelled: z.string().optional() }),
   loaderDeps: ({ search }) => ({ sessionId: search.session_id }),
   loader: async ({ params, deps }) => {
