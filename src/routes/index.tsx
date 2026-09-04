@@ -112,6 +112,22 @@ function Home() {
           </div>
         </section>
 
+        {/* Reasons clients seek support */}
+        <section id="reasons" className="mx-auto max-w-6xl px-6 py-20">
+          <h2 className="text-3xl md:text-4xl">{site.reasons.heading}</h2>
+          <p className="mt-3 max-w-xl text-muted-foreground">{site.reasons.intro}</p>
+          <ul className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {site.reasons.items.map((item) => (
+              <li
+                key={item}
+                className="rounded-2xl border border-border bg-card px-5 py-4 text-sm leading-relaxed text-card-foreground"
+              >
+                {item}
+              </li>
+            ))}
+          </ul>
+        </section>
+
         {/* Services */}
         <section id="services" className="mx-auto max-w-6xl px-6 py-20">
           <h2 className="text-3xl md:text-4xl">{site.servicesSection.heading}</h2>
