@@ -19,7 +19,7 @@ import { Route as ResourcesRouteImport } from './routes/resources'
 import { Route as WorkshopsRouteImport } from './routes/workshops'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
-import { Route as BookingIdRouteImport } from './routes/booking.$id'
+import { Route as AuthenticatedBookingIdRouteImport } from './routes/_authenticated/booking.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -70,10 +70,10 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const BookingIdRoute = BookingIdRouteImport.update({
+const AuthenticatedBookingIdRoute = AuthenticatedBookingIdRouteImport.update({
   id: '/booking/$id',
   path: '/booking/$id',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -86,7 +86,7 @@ export interface FileRoutesByFullPath {
   '/workshops': typeof WorkshopsRoute
   '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminRoute
-  '/booking/$id': typeof BookingIdRoute
+  '/booking/$id': typeof AuthenticatedBookingIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -98,7 +98,7 @@ export interface FileRoutesByTo {
   '/workshops': typeof WorkshopsRoute
   '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminRoute
-  '/booking/$id': typeof BookingIdRoute
+  '/booking/$id': typeof AuthenticatedBookingIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -112,7 +112,7 @@ export interface FileRoutesById {
   '/workshops': typeof WorkshopsRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
-  '/booking/$id': typeof BookingIdRoute
+  '/_authenticated/booking/$id': typeof AuthenticatedBookingIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,7 +151,7 @@ export interface FileRouteTypes {
     | '/workshops'
     | '/_authenticated/account'
     | '/_authenticated/admin'
-    | '/booking/$id'
+    | '/_authenticated/booking/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -163,7 +163,6 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   ResourcesRoute: typeof ResourcesRoute
   WorkshopsRoute: typeof WorkshopsRoute
-  BookingIdRoute: typeof BookingIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -238,12 +237,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/booking/$id': {
-      id: '/booking/$id'
+    '/_authenticated/booking/$id': {
+      id: '/_authenticated/booking/$id'
       path: '/booking/$id'
       fullPath: '/booking/$id'
-      preLoaderRoute: typeof BookingIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedBookingIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
@@ -251,11 +250,13 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedBookingIdRoute: typeof AuthenticatedBookingIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedBookingIdRoute: AuthenticatedBookingIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -270,7 +271,6 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   ResourcesRoute: ResourcesRoute,
   WorkshopsRoute: WorkshopsRoute,
-  BookingIdRoute: BookingIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
