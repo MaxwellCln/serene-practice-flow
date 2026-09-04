@@ -86,12 +86,12 @@ function Home() {
         <section id="about" className="border-y border-border bg-sand">
           <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-20 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)]">
             <img
-              src={therapistImage}
-              alt={`${site.shortName}, ${site.credentials}`}
+              src={therapistAsset.url}
+              alt={`${site.shortName}, ${site.credentials}, in a therapy session`}
               loading="lazy"
-              width={1008}
-              height={1264}
-              className="aspect-[4/5] w-full max-w-sm rounded-3xl object-cover"
+              width={1200}
+              height={800}
+              className="aspect-[3/2] w-full max-w-md rounded-3xl object-cover object-[center_25%] shadow-sm"
             />
             <div>
               <h2 className="text-3xl md:text-4xl">{site.about.heading}</h2>
