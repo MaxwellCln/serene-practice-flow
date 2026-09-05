@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AdminInviteRouteImport } from './routes/admin-invite'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BookRouteImport } from './routes/book'
 import { Route as FaqsRouteImport } from './routes/faqs'
@@ -28,6 +29,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminInviteRoute = AdminInviteRouteImport.update({
+  id: '/admin-invite',
+  path: '/admin-invite',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -78,6 +84,7 @@ const AuthenticatedBookingIdRoute = AuthenticatedBookingIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin-invite': typeof AdminInviteRoute
   '/auth': typeof AuthRoute
   '/book': typeof BookRoute
   '/faqs': typeof FaqsRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin-invite': typeof AdminInviteRoute
   '/auth': typeof AuthRoute
   '/book': typeof BookRoute
   '/faqs': typeof FaqsRoute
@@ -104,6 +112,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/admin-invite': typeof AdminInviteRoute
   '/auth': typeof AuthRoute
   '/book': typeof BookRoute
   '/faqs': typeof FaqsRoute
@@ -118,6 +127,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin-invite'
     | '/auth'
     | '/book'
     | '/faqs'
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin-invite'
     | '/auth'
     | '/book'
     | '/faqs'
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/admin-invite'
     | '/auth'
     | '/book'
     | '/faqs'
@@ -157,6 +169,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AdminInviteRoute: typeof AdminInviteRoute
   AuthRoute: typeof AuthRoute
   BookRoute: typeof BookRoute
   FaqsRoute: typeof FaqsRoute
@@ -179,6 +192,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-invite': {
+      id: '/admin-invite'
+      path: '/admin-invite'
+      fullPath: '/admin-invite'
+      preLoaderRoute: typeof AdminInviteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -265,6 +285,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AdminInviteRoute: AdminInviteRoute,
   AuthRoute: AuthRoute,
   BookRoute: BookRoute,
   FaqsRoute: FaqsRoute,

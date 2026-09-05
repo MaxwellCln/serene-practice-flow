@@ -77,29 +77,42 @@ function AdminPage() {
   }
 
   if (!isAdmin) {
+    const email = (account.data?.email ?? "").toLowerCase();
+    const canBootstrap = email === BOOTSTRAP_ADMIN_EMAIL;
     return (
       <Shell>
         <h1 className="text-3xl">Practice dashboard</h1>
-        <p className="mt-3 max-w-lg text-muted-foreground">
-          This area is private to the practice owner. If this is Valerie&apos;s first sign-in, you can
-          claim the admin role once — it only works while no admin exists yet.
-        </p>
-        <Button
-          className="mt-6 rounded-full"
-          onClick={async () => {
-            const result = await claimAdmin({});
-            if (result.granted) {
-              toast.success("Admin access granted.");
-              queryClient.invalidateQueries({ queryKey: ["account"] });
-            } else {
-              toast.error("An admin already exists for this practice.");
-            }
-          }}
-        >
-          Claim admin access
-        </Button>
+        {canBootstrap ? (
+          <>
+            <p className="mt-3 max-w-lg text-muted-foreground">
+              This area is private to the practice team. As the initial account holder you can claim
+              dashboard access once — it only works while no one else has it yet.
+            </p>
+            <Button
+              className="mt-6 rounded-full"
+              onClick={async () => {
+                const result = await claimAdmin({});
+                if (result.granted) {
+                  toast.success("Dashboard access granted.");
+                  queryClient.invalidateQueries({ queryKey: ["account"] });
+                } else {
+                  toast.error(
+                    "Access couldn't be granted. Confirm your email address, or ask an existing dashboard owner for an invitation.",
+                  );
+                }
+              }}
+            >
+              Claim initial access
+            </Button>
+          </>
+        ) : (
+          <p className="mt-3 max-w-lg text-muted-foreground">
+            This area is private to the practice team. Access is by invitation only — ask an
+            existing dashboard owner to send an invitation to your email address.
+          </p>
+        )}
         <p className="mt-6 text-sm text-muted-foreground">
-          Not you?{" "}
+          Not what you were looking for?{" "}
           <Link to="/account" className="underline">
             Go to your account
           </Link>
@@ -108,6 +121,7 @@ function AdminPage() {
       </Shell>
     );
   }
+
 
   const bookings = data.data?.bookings ?? [];
   const services = data.data?.services ?? [];
