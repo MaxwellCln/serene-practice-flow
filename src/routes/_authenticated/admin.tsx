@@ -346,3 +346,135 @@ function Shell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+function AdminAccessSection() {
+  const queryClient = useQueryClient();
+  const fetchInvites = useServerFn(listAdminInvites);
+  const sendInvite = useServerFn(createAdminInvite);
+  const revoke = useServerFn(revokeAdminInvite);
+
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [lastLink, setLastLink] = useState<{ link: string; emailSent: boolean } | null>(null);
+
+  const invites = useQuery({ queryKey: ["admin-invites"], queryFn: () => fetchInvites({}) });
+
+  async function handleInvite(event: React.FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    try {
+      const result = await sendInvite({
+        data: { email: email.trim(), origin: window.location.origin },
+      });
+      setLastLink({ link: result.link, emailSent: result.emailSent });
+      setEmail("");
+      queryClient.invalidateQueries({ queryKey: ["admin-invites"] });
+      if (result.emailSent) {
+        toast.success("Invitation email sent.");
+      } else {
+        toast.info("Invitation created — copy the link below and share it directly.");
+      }
+    } catch {
+      toast.error("That invitation couldn't be created. Please check the email address.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const rows = invites.data ?? [];
+
+  return (
+    <section className="mt-14">
+      <h2 className="text-2xl">Dashboard access</h2>
+      <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+        Invite someone to manage the practice dashboard. The link works only once, expires after 48
+        hours, and only grants access to a signed-in person whose confirmed email matches the
+        invitation.
+      </p>
+
+      <form className="mt-5 flex flex-wrap items-end gap-4" onSubmit={handleInvite}>
+        <div className="grid min-w-64 flex-1 gap-2">
+          <Label htmlFor="invite-email">Email address</Label>
+          <Input
+            id="invite-email"
+            type="email"
+            required
+            maxLength={255}
+            placeholder="valerie@example.ie"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        <Button type="submit" className="rounded-full" disabled={busy}>
+          Send invitation
+        </Button>
+      </form>
+
+      {lastLink && (
+        <div className="mt-5 rounded-2xl border border-border bg-secondary/40 p-5 text-sm">
+          <p className="font-medium">
+            {lastLink.emailSent
+              ? "Invitation emailed. You can also share this link directly:"
+              : "Email sending isn't set up yet, so no email was sent. Share this link privately instead:"}
+          </p>
+          <p className="mt-3 break-all rounded-xl bg-background px-4 py-3 font-mono text-xs">
+            {lastLink.link}
+          </p>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="mt-3 rounded-full"
+            onClick={async () => {
+              await navigator.clipboard.writeText(lastLink.link);
+              toast.success("Link copied.");
+            }}
+          >
+            Copy link
+          </Button>
+          {!lastLink.emailSent && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              To send invitations by email, a verified sending domain must be connected to the site
+              first.
+            </p>
+          )}
+        </div>
+      )}
+
+      <ul className="mt-6 grid gap-2">
+        {rows.map((invite) => (
+          <li
+            key={invite.id}
+            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border px-4 py-3 text-sm"
+          >
+            <span>
+              {invite.email} ·{" "}
+              <span className="text-muted-foreground">
+                {invite.status === "pending"
+                  ? `expires ${formatPracticeDate(invite.expiresAt)} ${formatPracticeTime(invite.expiresAt)}`
+                  : invite.status === "accepted"
+                    ? "accepted"
+                    : invite.status === "revoked"
+                      ? "withdrawn"
+                      : "expired"}
+              </span>
+            </span>
+            {invite.status === "pending" && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="rounded-full"
+                onClick={async () => {
+                  await revoke({ data: { id: invite.id } });
+                  queryClient.invalidateQueries({ queryKey: ["admin-invites"] });
+                  toast.success("Invitation withdrawn.");
+                }}
+              >
+                Withdraw
+              </Button>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
