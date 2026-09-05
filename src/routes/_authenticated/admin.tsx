@@ -26,7 +26,16 @@ import {
   setServiceActive,
   updateBookingAdmin,
 } from "@/lib/admin.functions";
+import {
+  createAdminInvite,
+  listAdminInvites,
+  revokeAdminInvite,
+} from "@/lib/admin-invite.functions";
 import { formatMoney, formatPracticeDate, formatPracticeTime } from "@/lib/time";
+
+/** Only this address may claim the very first dashboard access. */
+const BOOTSTRAP_ADMIN_EMAIL = "mclein568@gmail.com";
+
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
