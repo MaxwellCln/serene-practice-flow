@@ -321,7 +321,10 @@ function AdminPage() {
           ))}
         </ul>
       </section>
+
+      <AdminAccessSection />
     </Shell>
+
   );
 }
 
