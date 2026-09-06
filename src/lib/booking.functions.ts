@@ -89,13 +89,25 @@ const bookingInput = z.object({
   email: z.string().trim().email().max(255),
   phone: z.string().trim().max(40).optional().or(z.literal("")),
   notes: z.string().trim().max(1000).optional().or(z.literal("")),
+  origin: z.string().trim().max(300).optional(),
 });
+
+/** Only accept a well-formed absolute origin for links inside emails. */
+function safeOrigin(origin: string | undefined) {
+  if (!origin) return "";
+  try {
+    return new URL(origin).origin;
+  } catch {
+    return "";
+  }
+}
 
 export type CreateBookingResult = {
   bookingId: string;
   requiresPayment: boolean;
   checkoutUrl?: string;
   error?: string;
+  emailSent?: boolean;
 };
 
 export const createBooking = createServerFn({ method: "POST" })
@@ -162,7 +174,20 @@ export const createBooking = createServerFn({ method: "POST" })
       .update({ full_name: data.name, phone: data.phone || null })
       .eq("id", context.userId);
 
-    return { bookingId: booking.id as string, requiresPayment: Boolean(service.requires_payment) };
+    const emailSent = await notifyBooking("confirmation", {
+      to: data.email,
+      clientName: data.name,
+      serviceTitle: service.title as string,
+      startsAt: startsAt.toISOString(),
+      durationMinutes: service.duration_minutes as number,
+      ...(data.origin ? { origin: safeOrigin(data.origin) } : {}),
+    });
+
+    return {
+      bookingId: booking.id as string,
+      requiresPayment: Boolean(service.requires_payment),
+      emailSent,
+    };
   });
 
 export const getBookingSummary = createServerFn({ method: "GET" })
@@ -224,14 +249,176 @@ export const listMyBookings = createServerFn({ method: "GET" })
     }));
   });
 
+/** Clients may change a booking online only outside this window. */
+export const CHANGE_CUTOFF_HOURS = 24;
+
+export type ChangeResult = {
+  ok: boolean;
+  error?: string;
+  emailSent?: boolean;
+};
+
+async function loadOwnBooking(supabase: SupabaseLike, id: string, userId: string) {
+  const { data, error } = await supabase
+    .from("bookings")
+    .select(
+      "id, starts_at, duration_minutes, status, client_name, client_email, service_id, services(title)",
+    )
+    .eq("id", id)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data as BookingRow | null;
+}
+
+type BookingRow = {
+  id: string;
+  starts_at: string;
+  duration_minutes: number;
+  status: string;
+  client_name: string;
+  client_email: string;
+  service_id: string;
+  services?: { title?: string } | null;
+};
+
+type SupabaseLike = { from: (table: string) => any };
+
+const tooLateMessage = `Sessions can only be changed online more than ${CHANGE_CUTOFF_HOURS} hours in advance. Please contact the practice on ${site.phone} or ${site.email}.`;
+
+async function notifyBooking(
+  kind: "confirmation" | "cancellation" | "reschedule",
+  args: {
+    to: string;
+    clientName: string;
+    serviceTitle: string;
+    startsAt: string;
+    durationMinutes: number;
+    origin?: string;
+    previousStartsAt?: string;
+  },
+) {
+  const { sendBookingEmail } = await import("@/lib/booking-email.server");
+  const result = await sendBookingEmail(args.to, {
+    kind,
+    practiceName: site.practiceName,
+    clientName: args.clientName,
+    serviceTitle: args.serviceTitle,
+    startsAt: args.startsAt,
+    durationMinutes: args.durationMinutes,
+    location: site.location,
+    manageUrl: args.origin ? `${args.origin}/account` : "",
+    practiceEmail: site.email,
+    practicePhone: site.phone,
+    ...(args.previousStartsAt ? { previousStartsAt: args.previousStartsAt } : {}),
+  });
+  return result.sent;
+}
+
 export const cancelMyBooking = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
-  .handler(async ({ data, context }) => {
+  .inputValidator((data: unknown) =>
+    z.object({ id: z.string().uuid(), origin: z.string().trim().max(300).optional() }).parse(data),
+  )
+  .handler(async ({ data, context }): Promise<ChangeResult> => {
+    const booking = await loadOwnBooking(context.supabase, data.id, context.userId);
+    if (!booking) return { ok: false, error: "We couldn't find that booking." };
+    if (booking.status === "cancelled") return { ok: true };
+
+    // Server-side cutoff: never rely on the UI alone.
+    if (new Date(booking.starts_at).getTime() - Date.now() < CHANGE_CUTOFF_HOURS * 3_600_000) {
+      return { ok: false, error: tooLateMessage };
+    }
+
     const { error } = await context.supabase
       .from("bookings")
       .update({ status: "cancelled" })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
-    return { ok: true };
+
+    const emailSent = await notifyBooking("cancellation", {
+      to: booking.client_email,
+      clientName: booking.client_name,
+      serviceTitle: booking.services?.title ?? "Session",
+      startsAt: booking.starts_at,
+      durationMinutes: booking.duration_minutes,
+      ...(data.origin ? { origin: safeOrigin(data.origin) } : {}),
+    });
+
+    return { ok: true, emailSent };
+  });
+
+export const rescheduleMyBooking = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        startsAt: z.string().min(1),
+        origin: z.string().trim().max(300).optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }): Promise<ChangeResult> => {
+    const booking = await loadOwnBooking(context.supabase, data.id, context.userId);
+    if (!booking) return { ok: false, error: "We couldn't find that booking." };
+    if (booking.status === "cancelled") {
+      return { ok: false, error: "That booking has been cancelled — please book a new session." };
+    }
+
+    const now = Date.now();
+    if (new Date(booking.starts_at).getTime() - now < CHANGE_CUTOFF_HOURS * 3_600_000) {
+      return { ok: false, error: tooLateMessage };
+    }
+
+    const next = new Date(data.startsAt);
+    if (Number.isNaN(next.getTime())) return { ok: false, error: "That time slot is not valid." };
+    if (next.getTime() - now < CHANGE_CUTOFF_HOURS * 3_600_000) {
+      return { ok: false, error: "Please choose a time at least 24 hours from now." };
+    }
+    if (next.getTime() > now + site.availability.horizonDays * 86_400_000) {
+      return { ok: false, error: "Please choose a time within the next few weeks." };
+    }
+
+    // The new time must be a real slot on the practice's weekly schedule.
+    const dateKey = practiceDateKey(next);
+    const weekday = new Date(`${dateKey}T12:00:00Z`).getUTCDay();
+    const rule = site.availability.days.find((d) => d.weekday === weekday);
+    const isScheduled = rule?.times.some(
+      (time) => practiceTimeToUtc(dateKey, time).getTime() === next.getTime(),
+    );
+    if (!isScheduled) return { ok: false, error: "That time isn't available. Please pick another." };
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: blocked } = await supabaseAdmin
+      .from("availability_blocks")
+      .select("id")
+      .lte("starts_at", next.toISOString())
+      .gt("ends_at", next.toISOString())
+      .maybeSingle();
+    if (blocked) return { ok: false, error: "That time isn't available. Please pick another." };
+
+    const { error } = await context.supabase
+      .from("bookings")
+      .update({ starts_at: next.toISOString() })
+      .eq("id", data.id);
+    if (error) {
+      if (error.code === "23505") {
+        return { ok: false, error: "Sorry — that slot was just taken. Please pick another." };
+      }
+      throw new Error(error.message);
+    }
+
+    const emailSent = await notifyBooking("reschedule", {
+      to: booking.client_email,
+      clientName: booking.client_name,
+      serviceTitle: booking.services?.title ?? "Session",
+      startsAt: next.toISOString(),
+      durationMinutes: booking.duration_minutes,
+      previousStartsAt: booking.starts_at,
+      ...(data.origin ? { origin: safeOrigin(data.origin) } : {}),
+    });
+
+    return { ok: true, emailSent };
   });
