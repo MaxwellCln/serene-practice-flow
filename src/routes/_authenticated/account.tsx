@@ -7,11 +7,22 @@ import { toast } from "sonner";
 
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { site } from "@/content/site";
-import { getMyAccount, updateMyProfile } from "@/lib/account.functions";
+import { deleteMyAccount, getMyAccount, updateMyProfile } from "@/lib/account.functions";
 import { cancelMyBooking, listMyBookings } from "@/lib/booking.functions";
 import { formatMoney, formatPracticeDate, formatPracticeTime } from "@/lib/time";
 
@@ -37,12 +48,15 @@ function AccountPage() {
   const fetchBookings = useServerFn(listMyBookings);
   const saveProfile = useServerFn(updateMyProfile);
   const cancelBooking = useServerFn(cancelMyBooking);
+  const removeAccount = useServerFn(deleteMyAccount);
 
   const account = useQuery({ queryKey: ["account"], queryFn: () => fetchAccount({}) });
   const bookings = useQuery({ queryKey: ["my-bookings"], queryFn: () => fetchBookings({}) });
 
   const [form, setForm] = useState({ fullName: "", phone: "" });
   const [saving, setSaving] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (account.data) setForm({ fullName: account.data.fullName, phone: account.data.phone });
