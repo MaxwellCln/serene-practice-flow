@@ -23,7 +23,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { site } from "@/content/site";
 import { deleteMyAccount, getMyAccount, updateMyProfile } from "@/lib/account.functions";
-import { cancelMyBooking, listMyBookings } from "@/lib/booking.functions";
+import {
+  CHANGE_CUTOFF_HOURS,
+  cancelMyBooking,
+  listAvailability,
+  listMyBookings,
+  rescheduleMyBooking,
+} from "@/lib/booking.functions";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { formatMoney, formatPracticeDate, formatPracticeTime } from "@/lib/time";
 
 export const Route = createFileRoute("/_authenticated/account")({
@@ -48,6 +61,8 @@ function AccountPage() {
   const fetchBookings = useServerFn(listMyBookings);
   const saveProfile = useServerFn(updateMyProfile);
   const cancelBooking = useServerFn(cancelMyBooking);
+  const rescheduleBooking = useServerFn(rescheduleMyBooking);
+  const fetchAvailability = useServerFn(listAvailability);
   const removeAccount = useServerFn(deleteMyAccount);
 
   const account = useQuery({ queryKey: ["account"], queryFn: () => fetchAccount({}) });
@@ -56,6 +71,8 @@ function AccountPage() {
   const [form, setForm] = useState({ fullName: "", phone: "" });
   const [saving, setSaving] = useState(false);
   const [confirmText, setConfirmText] = useState("");
+  const [rescheduleId, setRescheduleId] = useState<string | null>(null);
+  const [movingTo, setMovingTo] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -76,15 +93,58 @@ function AccountPage() {
     }
   }
 
-  async function handleCancel(id: string) {
-    try {
-      await cancelBooking({ data: { id } });
-      toast.success("Booking cancelled.");
-      queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
-    } catch {
-      toast.error("We couldn't cancel that booking. Please email us.");
+  const availability = useQuery({
+    queryKey: ["availability"],
+    queryFn: () => fetchAvailability({}),
+    enabled: rescheduleId !== null,
+  });
+
+  function noteEmail(emailSent: boolean | undefined) {
+    if (!emailSent) {
+      toast.message("Email confirmations aren't switched on yet — check this page for the details.");
     }
   }
+
+  async function handleCancel(id: string) {
+    try {
+      const result = await cancelBooking({ data: { id, origin: window.location.origin } });
+      if (!result.ok) {
+        toast.error(result.error ?? "We couldn't cancel that booking.");
+        return;
+      }
+      toast.success("Booking cancelled.");
+      noteEmail(result.emailSent);
+      queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
+    } catch {
+      toast.error("We couldn't cancel that booking. Please contact the practice.");
+    }
+  }
+
+  async function handleReschedule(iso: string) {
+    if (!rescheduleId) return;
+    setMovingTo(iso);
+    try {
+      const result = await rescheduleBooking({
+        data: { id: rescheduleId, startsAt: iso, origin: window.location.origin },
+      });
+      if (!result.ok) {
+        toast.error(result.error ?? "We couldn't move that session.");
+        return;
+      }
+      toast.success("Your session has been moved.");
+      noteEmail(result.emailSent);
+      setRescheduleId(null);
+      queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["availability"] });
+    } catch {
+      toast.error("We couldn't move that session. Please contact the practice.");
+    } finally {
+      setMovingTo(null);
+    }
+  }
+
+  const canChange = (startsAt: string) =>
+    new Date(startsAt).getTime() - Date.now() > CHANGE_CUTOFF_HOURS * 3_600_000;
 
   return (
     <div className="min-h-screen bg-background">
@@ -109,6 +169,10 @@ function AccountPage() {
 
         <section className="mt-12">
           <h2 className="text-2xl">Your sessions</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            You can reschedule or cancel online up to {CHANGE_CUTOFF_HOURS} hours before a session.
+            Closer than that, please contact the practice on {site.phone}.
+          </p>
           {bookings.isLoading ? (
             <p className="mt-4 text-sm text-muted-foreground">Loading…</p>
           ) : (bookings.data ?? []).length === 0 ? (
@@ -138,22 +202,39 @@ function AccountPage() {
                     {formatPracticeDate(b.startsAt)}, {formatPracticeTime(b.startsAt)} ·{" "}
                     {b.durationMinutes} minutes · {b.status}
                   </p>
-                  <div className="mt-4 flex gap-2">
+                  <div className="mt-4 flex flex-wrap gap-2">
                     <Button asChild size="sm" variant="secondary" className="rounded-full">
                       <Link to="/booking/$id" params={{ id: b.id }}>
                         View
                       </Link>
                     </Button>
-                    {b.status !== "cancelled" && new Date(b.startsAt) > new Date() && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="rounded-full"
-                        onClick={() => handleCancel(b.id)}
-                      >
-                        Cancel
-                      </Button>
-                    )}
+                    {b.status !== "cancelled" &&
+                      new Date(b.startsAt) > new Date() &&
+                      (canChange(b.startsAt) ? (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="rounded-full"
+                            onClick={() => setRescheduleId(b.id)}
+                          >
+                            Reschedule
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="rounded-full"
+                            onClick={() => handleCancel(b.id)}
+                          >
+                            Cancel
+                          </Button>
+                        </>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          Within {CHANGE_CUTOFF_HOURS} hours of your session — please call{" "}
+                          {site.phone} to change it.
+                        </p>
+                      ))}
                   </div>
                 </li>
               ))}
@@ -305,6 +386,51 @@ function AccountPage() {
           </div>
         </section>
       </main>
+      <Dialog open={rescheduleId !== null} onOpenChange={(open) => !open && setRescheduleId(null)}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto rounded-3xl">
+          <DialogHeader>
+            <DialogTitle>Choose a new time</DialogTitle>
+            <DialogDescription>
+              Times shown are {site.availability.timezoneLabel} and are at least{" "}
+              {CHANGE_CUTOFF_HOURS} hours away.
+            </DialogDescription>
+          </DialogHeader>
+          {availability.isLoading ? (
+            <p className="text-sm text-muted-foreground">Loading available times…</p>
+          ) : (availability.data ?? []).length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No times are free at the moment. Please contact the practice on {site.phone}.
+            </p>
+          ) : (
+            <div className="grid gap-5">
+              {(availability.data ?? []).map((day) => (
+                <div key={day.date}>
+                  <p className="font-display text-base">
+                    {day.label}, {formatPracticeDate(day.slots[0]!.iso)}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {day.slots.map((slot) => (
+                      <Button
+                        key={slot.iso}
+                        size="sm"
+                        variant="secondary"
+                        className="rounded-full"
+                        disabled={movingTo !== null}
+                        onClick={() => handleReschedule(slot.iso)}
+                      >
+                        {movingTo === slot.iso && (
+                          <Loader2 className="mr-2 h-3 w-3 animate-spin" aria-hidden />
+                        )}
+                        {slot.time}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       <SiteFooter />
     </div>
   );

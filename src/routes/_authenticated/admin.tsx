@@ -152,8 +152,19 @@ function AdminPage() {
         </Button>
       </div>
 
+      <section className="mt-10 rounded-2xl border border-border bg-muted/40 p-5">
+        <p className="text-sm text-muted-foreground">
+          Automatic booking emails to clients are ready to go, but they can only be sent once a
+          verified sending domain is set up for the practice. Until then clients see their session
+          details on screen and in their own account, and no email is sent.
+        </p>
+      </section>
+
       <section className="mt-12">
         <h2 className="text-2xl">Bookings</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Change a session&apos;s status (including cancelling it) and record payment here.
+        </p>
         {data.isLoading ? (
           <p className="mt-4 text-sm text-muted-foreground">Loading…</p>
         ) : bookings.length === 0 ? (
@@ -220,6 +231,24 @@ function AdminPage() {
             ))}
           </ul>
         )}
+      </section>
+
+      <section className="mt-14">
+        <h2 className="text-2xl">Weekly availability</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          These are the times offered to clients each week ({site.availability.timezoneLabel}).
+          Clients can book up to {site.availability.horizonDays} days ahead and must book, move or
+          cancel at least {site.availability.noticeHours} hours in advance. To change the weekly
+          pattern, ask your website contact to update the practice hours.
+        </p>
+        <ul className="mt-5 grid gap-3 sm:grid-cols-2">
+          {site.availability.days.map((day) => (
+            <li key={day.weekday} className="rounded-2xl border border-border bg-card p-5">
+              <p className="font-display text-lg">{day.label}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{day.times.join(" · ")}</p>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section className="mt-14">

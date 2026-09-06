@@ -97,6 +97,7 @@ function BookPage() {
           email: parsed.data.email,
           phone: parsed.data.phone ?? "",
           notes: parsed.data.notes ?? "",
+          origin: window.location.origin,
         },
       });
       if (result.error || !result.bookingId) {
@@ -113,6 +114,11 @@ function BookPage() {
           return;
         }
         if (checkout.status === "error") toast.error(checkout.message);
+      }
+      if (!result.emailSent) {
+        toast.message(
+          "Email confirmations aren't switched on yet — your details are on the next page.",
+        );
       }
       navigate({ to: "/booking/$id", params: { id: result.bookingId } });
     } catch {

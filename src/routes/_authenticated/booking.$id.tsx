@@ -75,8 +75,8 @@ function BookingConfirmation() {
           </h1>
           <p className="mt-3 text-muted-foreground">
             {paid || notRequired
-              ? "A confirmation has been noted against your booking. I look forward to meeting you."
-              : "Your slot is reserved. Payment will be arranged by email before the session."}
+              ? "Your session is confirmed. The details are below and in your account."
+              : "Your slot is reserved. Payment will be arranged with you before the session."}
           </p>
 
           <dl className="mt-8 space-y-3 border-t border-border pt-6 text-sm">
@@ -90,6 +90,10 @@ function BookingConfirmation() {
                 {formatPracticeDate(booking.startsAt)}, {formatPracticeTime(booking.startsAt)} (
                 {site.availability.timezoneLabel})
               </dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">Where</dt>
+              <dd className="text-right">{site.location}</dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-muted-foreground">Length</dt>
@@ -110,7 +114,14 @@ function BookingConfirmation() {
           </dl>
 
           <p className="mt-8 text-sm text-muted-foreground">
-            Need to change something? Email{" "}
+            You can reschedule or cancel from{" "}
+            <Link to="/account" className="underline">
+              your account
+            </Link>{" "}
+            up to 24 hours before your session.
+          </p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Closer than that, or need something else? Email{" "}
             <a className="underline" href={`mailto:${site.email}`}>
               {site.email}
             </a>{" "}
