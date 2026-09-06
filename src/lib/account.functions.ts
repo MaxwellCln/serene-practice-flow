@@ -61,3 +61,55 @@ export const claimFirstAdmin = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { granted: Boolean(data) };
   });
+
+/**
+ * Self-service account deletion.
+ * Booking/payment records are retained for the practice's records but stripped
+ * of personal details; the profile row and the auth user are removed.
+ */
+export const deleteMyAccount = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ confirm: z.literal("DELETE") }).parse(data))
+  .handler(async ({ context }) => {
+    const userId = context.userId;
+
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: userId,
+      _role: "admin",
+    });
+    if (isAdmin) {
+      throw new Error("Administrator accounts can't be deleted from here.");
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Cancel any future sessions so the slot is released.
+    await supabaseAdmin
+      .from("bookings")
+      .update({ status: "cancelled" })
+      .eq("user_id", userId)
+      .neq("status", "cancelled")
+      .gt("starts_at", new Date().toISOString());
+
+    // Keep the financial/appointment record, remove the personal details.
+    const { error: anonError } = await supabaseAdmin
+      .from("bookings")
+      .update({
+        client_name: "Deleted client",
+        client_email: `deleted+${userId}@removed.invalid`,
+        client_phone: null,
+        notes: null,
+        user_id: null,
+      })
+      .eq("user_id", userId);
+    if (anonError) throw new Error(anonError.message);
+
+    await supabaseAdmin.from("user_roles").delete().eq("user_id", userId);
+    const { error: profileError } = await supabaseAdmin.from("profiles").delete().eq("id", userId);
+    if (profileError) throw new Error(profileError.message);
+
+    const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+    if (authError) throw new Error(authError.message);
+
+    return { ok: true };
+  });
