@@ -7,11 +7,22 @@ import { toast } from "sonner";
 
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { site } from "@/content/site";
-import { getMyAccount, updateMyProfile } from "@/lib/account.functions";
+import { deleteMyAccount, getMyAccount, updateMyProfile } from "@/lib/account.functions";
 import { cancelMyBooking, listMyBookings } from "@/lib/booking.functions";
 import { formatMoney, formatPracticeDate, formatPracticeTime } from "@/lib/time";
 
@@ -37,12 +48,15 @@ function AccountPage() {
   const fetchBookings = useServerFn(listMyBookings);
   const saveProfile = useServerFn(updateMyProfile);
   const cancelBooking = useServerFn(cancelMyBooking);
+  const removeAccount = useServerFn(deleteMyAccount);
 
   const account = useQuery({ queryKey: ["account"], queryFn: () => fetchAccount({}) });
   const bookings = useQuery({ queryKey: ["my-bookings"], queryFn: () => fetchBookings({}) });
 
   const [form, setForm] = useState({ fullName: "", phone: "" });
   const [saving, setSaving] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (account.data) setForm({ fullName: account.data.fullName, phone: account.data.phone });
@@ -185,6 +199,110 @@ function AccountPage() {
           >
             Sign out
           </Button>
+        </section>
+
+        <section className="mt-14">
+          <h2 className="text-2xl">Account settings</h2>
+
+          <div className="mt-5 grid gap-4">
+            <div className="rounded-2xl border border-border bg-card p-5">
+              <h3 className="font-display text-lg">Password</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                We&apos;ll email you a secure link to choose a new password.
+              </p>
+              <Button
+                variant="secondary"
+                className="mt-4 rounded-full"
+                onClick={async () => {
+                  const email = account.data?.email;
+                  if (!email) return;
+                  const { supabase } = await import("@/integrations/supabase/client");
+                  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: `${window.location.origin}/reset-password`,
+                  });
+                  if (error) toast.error("We couldn't send that email. Please try again.");
+                  else toast.success(`Reset link sent to ${email}.`);
+                }}
+              >
+                Change password
+              </Button>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card p-5">
+              <h3 className="font-display text-lg">Email address</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Changing the email address on your account isn&apos;t supported at the moment. If you
+                need it changed, email{" "}
+                <a href={`mailto:${site.email}`} className="underline">
+                  {site.email}
+                </a>{" "}
+                or call {site.phone} and we&apos;ll sort it with you.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-destructive/40 bg-card p-5">
+              <h3 className="font-display text-lg">Delete your account</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                This removes your sign-in and your saved contact details for good. Any upcoming
+                sessions are cancelled. For our records, past appointment and payment entries are
+                kept, with your personal details removed.
+              </p>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" className="mt-4 rounded-full" disabled={deleting}>
+                    {deleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />}
+                    Delete my account
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="rounded-3xl">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This can&apos;t be undone. Type DELETE below to confirm.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div className="grid gap-2">
+                    <Label htmlFor="confirmDelete">Confirmation</Label>
+                    <Input
+                      id="confirmDelete"
+                      value={confirmText}
+                      autoComplete="off"
+                      placeholder="DELETE"
+                      onChange={(e) => setConfirmText(e.target.value)}
+                    />
+                  </div>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="rounded-full">Keep my account</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="rounded-full"
+                      disabled={confirmText.trim() !== "DELETE" || deleting}
+                      onClick={async (event) => {
+                        event.preventDefault();
+                        setDeleting(true);
+                        try {
+                          await removeAccount({ data: { confirm: "DELETE" } });
+                          await queryClient.cancelQueries();
+                          queryClient.clear();
+                          const { supabase } = await import("@/integrations/supabase/client");
+                          await supabase.auth.signOut();
+                          toast.success("Your account has been deleted.");
+                          navigate({ to: "/", replace: true });
+                        } catch {
+                          toast.error(
+                            "We couldn't delete your account. Please contact the practice.",
+                          );
+                        } finally {
+                          setDeleting(false);
+                        }
+                      }}
+                    >
+                      Delete permanently
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </div>
         </section>
       </main>
       <SiteFooter />
