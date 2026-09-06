@@ -54,12 +54,10 @@ export function SiteHeader() {
           <div className="md:hidden">
             <MoreMenu />
           </div>
-          <Button asChild variant="ghost" size="sm" className="hidden rounded-full sm:inline-flex">
-            <Link to={session ? "/account" : "/auth"}>{session ? "My account" : "Sign in"}</Link>
-          </Button>
           <Button asChild size="sm" className="rounded-full px-5">
             <Link to="/book">Book</Link>
           </Button>
+          <AccountMenu />
         </div>
       </div>
     </header>
