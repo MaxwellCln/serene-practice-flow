@@ -187,7 +187,7 @@ function AccountPage() {
             You can reschedule or cancel online up to {CHANGE_CUTOFF_HOURS} hours before a session.
             Closer than that, please contact the practice on {site.phone}.
           </p>
-          {bookings.isLoading ? (
+          {!signedIn || bookings.isLoading ? (
             <p className="mt-4 text-sm text-muted-foreground">Loading…</p>
           ) : (bookings.data ?? []).length === 0 ? (
             <p className="mt-4 text-sm text-muted-foreground">
