@@ -33,6 +33,12 @@ import {
   revokeAdminInvite,
 } from "@/lib/admin-invite.functions";
 import { listAvailability } from "@/lib/booking.functions";
+import {
+  addAvailabilitySlot,
+  closeAvailabilitySlot,
+  getWeekAvailability,
+  reopenAvailabilitySlot,
+} from "@/lib/admin.functions";
 import { Badge } from "@/components/ui/badge";
 import {
   formatMoney,
@@ -666,6 +672,168 @@ function AdminAccessSection() {
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+/** Admin-only editor for opening and closing individual times in the coming week. */
+function WeekAheadEditor({ isAdmin }: { isAdmin: boolean }) {
+  const queryClient = useQueryClient();
+  const fetchWeek = useServerFn(getWeekAvailability);
+  const addSlot = useServerFn(addAvailabilitySlot);
+  const closeSlot = useServerFn(closeAvailabilitySlot);
+  const reopenSlot = useServerFn(reopenAvailabilitySlot);
+
+  const [busy, setBusy] = useState<string | null>(null);
+  const [draft, setDraft] = useState({ date: "", time: "" });
+
+  const week = useQuery({
+    queryKey: ["admin-week"],
+    queryFn: () => fetchWeek({}),
+    enabled: isAdmin,
+    retry: false,
+  });
+
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["admin-week"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-availability"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-data"] });
+  };
+
+  const run = async (key: string, fn: () => Promise<{ ok: boolean; error?: string }>, done: string) => {
+    setBusy(key);
+    try {
+      const result = await fn();
+      if (!result.ok) toast.error(result.error ?? "That didn't work.");
+      else {
+        toast.success(done);
+        refresh();
+      }
+    } catch {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  if (!isAdmin) return null;
+
+  const days = week.data ?? [];
+
+  return (
+    <section className="mt-14">
+      <h2 className="text-2xl">The week ahead</h2>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Open or close individual times for the next seven days ({site.availability.timezoneLabel}).
+        Closed times disappear from the booking page straight away; times with a session booked
+        can&apos;t be closed until that session is cancelled.
+      </p>
+
+      <form
+        className="mt-5 grid gap-3 rounded-2xl border border-border bg-card p-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!draft.date || !draft.time) {
+            toast.error("Choose a date and a time.");
+            return;
+          }
+          void run("add", () => addSlot({ data: draft }), "Time opened.").then(() =>
+            setDraft({ date: "", time: "" }),
+          );
+        }}
+      >
+        <div className="grid gap-2">
+          <Label htmlFor="extra-date">Add a date</Label>
+          <Input
+            id="extra-date"
+            type="date"
+            value={draft.date}
+            onChange={(e) => setDraft((d) => ({ ...d, date: e.target.value }))}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="extra-time">Start time</Label>
+          <Input
+            id="extra-time"
+            type="time"
+            step={900}
+            value={draft.time}
+            onChange={(e) => setDraft((d) => ({ ...d, time: e.target.value }))}
+          />
+        </div>
+        <Button type="submit" className="rounded-full" disabled={busy === "add"}>
+          Open this time
+        </Button>
+      </form>
+
+      {week.isLoading ? (
+        <p className="mt-5 text-sm text-muted-foreground">Loading the week…</p>
+      ) : days.every((d) => d.slots.length === 0) ? (
+        <p className="mt-5 rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+          No times are set for the next seven days. Add one above and it becomes bookable
+          immediately.
+        </p>
+      ) : (
+        <ul className="mt-5 grid gap-4">
+          {days.map((day) => (
+            <li key={day.date} className="rounded-2xl border border-border bg-card p-5">
+              <p className="font-display text-lg">{day.label}</p>
+              {day.slots.length === 0 ? (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Nothing offered this day. Add a time above if you&apos;d like to work.
+                </p>
+              ) : (
+                <ul className="mt-3 flex flex-wrap gap-2">
+                  {day.slots.map((slot) => (
+                    <li
+                      key={slot.iso}
+                      className="flex flex-wrap items-center gap-2 rounded-full border border-border bg-background py-1 pl-3 pr-1 text-sm"
+                    >
+                      <span className="font-medium">{slot.time}</span>
+                      {slot.state === "booked" ? (
+                        <>
+                          <Badge variant="secondary" className="rounded-full">
+                            {slot.clientName}
+                          </Badge>
+                          <span className="pr-2 text-xs text-muted-foreground">booked</span>
+                        </>
+                      ) : slot.state === "past" ? (
+                        <span className="pr-2 text-xs text-muted-foreground">passed</span>
+                      ) : slot.state === "closed" ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 rounded-full px-3 text-xs"
+                          disabled={busy === slot.iso}
+                          onClick={() =>
+                            void run(slot.iso, () => reopenSlot({ data: { iso: slot.iso } }), "Time opened.")
+                          }
+                        >
+                          Closed · reopen
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 rounded-full px-3 text-xs"
+                          disabled={busy === slot.iso}
+                          onClick={() =>
+                            void run(slot.iso, () => closeSlot({ data: { iso: slot.iso } }), "Time closed.")
+                          }
+                        >
+                          Open · close
+                        </Button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }
