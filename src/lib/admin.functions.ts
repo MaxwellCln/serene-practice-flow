@@ -2,6 +2,13 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { site } from "@/content/site";
+import {
+  formatPracticeDate,
+  formatPracticeTime,
+  practiceDateKey,
+  practiceTimeToUtc,
+} from "@/lib/time";
 
 export type AdminBooking = {
   id: string;
@@ -378,7 +385,7 @@ export const reopenAvailabilitySlot = createServerFn({ method: "POST" })
 
     const { data: blocks, error } = await context.supabase
       .from("availability_blocks")
-      .select("id, starts_at, ends_at");
+      .select("id, starts_at, ends_at, reason");
     if (error) throw new Error(error.message);
 
     for (const b of blocks ?? []) {
