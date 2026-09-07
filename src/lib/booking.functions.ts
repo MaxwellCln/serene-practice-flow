@@ -3,7 +3,13 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { site } from "@/content/site";
-import { practiceDateKey, practiceTimeToUtc } from "@/lib/time";
+import {
+  formatPracticeDate,
+  formatPracticeTime,
+  practiceDateKey,
+  practiceTimeToUtc,
+} from "@/lib/time";
+
 
 export type Service = {
   id: string;
