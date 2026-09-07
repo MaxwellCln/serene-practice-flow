@@ -34,7 +34,12 @@ import {
 } from "@/lib/admin-invite.functions";
 import { listAvailability } from "@/lib/booking.functions";
 import { Badge } from "@/components/ui/badge";
-import { formatMoney, formatPracticeDate, formatPracticeTime } from "@/lib/time";
+import {
+  formatMoney,
+  formatPracticeDate,
+  formatPracticeTime,
+  practiceDateKey,
+} from "@/lib/time";
 
 /** Only this address may claim the very first dashboard access. */
 const BOOTSTRAP_ADMIN_EMAIL = "mclein568@gmail.com";
@@ -311,7 +316,7 @@ function AdminPage() {
 
 
       <section className="mt-12">
-        <h2 className="text-2xl">Bookings</h2>
+        <h2 className="text-2xl">All bookings</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Change a session&apos;s status (including cancelling it) and record payment here.
         </p>
@@ -483,6 +488,9 @@ function AdminPage() {
           </Button>
         </form>
 
+        {blocks.length === 0 && (
+          <p className="mt-6 text-sm text-muted-foreground">No time off blocked at the moment.</p>
+        )}
         <ul className="mt-6 grid gap-2">
           {blocks.map((b) => (
             <li
