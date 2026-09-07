@@ -77,6 +77,27 @@ export type Database = {
         }
         Relationships: []
       }
+      availability_extras: {
+        Row: {
+          created_at: string
+          id: string
+          note: string
+          starts_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string
+          starts_at: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string
+          starts_at?: string
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           amount_cents: number

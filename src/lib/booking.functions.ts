@@ -3,7 +3,13 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { site } from "@/content/site";
-import { practiceDateKey, practiceTimeToUtc } from "@/lib/time";
+import {
+  formatPracticeDate,
+  formatPracticeTime,
+  practiceDateKey,
+  practiceTimeToUtc,
+} from "@/lib/time";
+
 
 export type Service = {
   id: string;
@@ -60,26 +66,52 @@ export const listAvailability = createServerFn({ method: "GET" }).handler(
       new Date(b.ends_at as string).getTime(),
     ]) as [number, number][];
 
+    const { data: extras, error: extraError } = await supabaseAdmin
+      .from("availability_extras")
+      .select("starts_at")
+      .gte("starts_at", new Date(now).toISOString())
+      .lte("starts_at", horizonEnd.toISOString());
+    if (extraError) throw new Error(extraError.message);
+    const extraByDay = new Map<string, string[]>();
+    for (const e of extras ?? []) {
+      const iso = new Date(e.starts_at as string).toISOString();
+      const key = practiceDateKey(new Date(iso));
+      extraByDay.set(key, [...(extraByDay.get(key) ?? []), iso]);
+    }
+
     const days: DayAvailability[] = [];
     for (let i = 0; i <= site.availability.horizonDays; i++) {
       const day = new Date(now + i * 86_400_000);
       const dateKey = practiceDateKey(day);
       const weekday = new Date(`${dateKey}T12:00:00Z`).getUTCDay();
       const rule = site.availability.days.find((d) => d.weekday === weekday);
-      if (!rule) continue;
+      const extraIsos = extraByDay.get(dateKey) ?? [];
+      if (!rule && extraIsos.length === 0) continue;
 
-      const slots = rule.times
-        .map((time) => ({ time, iso: practiceTimeToUtc(dateKey, time).toISOString() }))
+      const candidates = [
+        ...(rule?.times ?? []).map((time) => ({
+          time,
+          iso: practiceTimeToUtc(dateKey, time).toISOString(),
+        })),
+        ...extraIsos.map((iso) => ({ time: formatPracticeTime(iso), iso })),
+      ];
+      const seen = new Set<string>();
+      const slots = candidates
         .filter((s) => {
+          if (seen.has(s.iso)) return false;
+          seen.add(s.iso);
           const t = new Date(s.iso).getTime();
           if (t <= earliest || taken.has(s.iso)) return false;
           return !ranges.some(([start, end]) => t >= start && t < end);
-        });
+        })
+        .sort((a, b) => a.iso.localeCompare(b.iso));
 
-      if (slots.length > 0) days.push({ date: dateKey, label: rule.label, slots });
+      if (slots.length > 0)
+        days.push({ date: dateKey, label: rule?.label ?? formatPracticeDate(`${dateKey}T12:00:00Z`), slots });
     }
     return days;
   },
+
 );
 
 const bookingInput = z.object({

@@ -2,6 +2,13 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { site } from "@/content/site";
+import {
+  formatPracticeDate,
+  formatPracticeTime,
+  practiceDateKey,
+  practiceTimeToUtc,
+} from "@/lib/time";
 
 export type AdminBooking = {
   id: string;
@@ -181,5 +188,227 @@ export const removeAvailabilityBlock = createServerFn({ method: "POST" })
     await assertAdmin(context as never);
     const { error } = await context.supabase.from("availability_blocks").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** ── Week-ahead availability editing ───────────────────────────── */
+
+export type WeekSlot = {
+  iso: string;
+  time: string;
+  state: "booked" | "open" | "closed" | "past";
+  source: "weekly" | "extra";
+  clientName?: string;
+  bookingStatus?: string;
+};
+
+export type WeekDay = {
+  date: string;
+  label: string;
+  slots: WeekSlot[];
+};
+
+/** Length of the window closed when an admin removes a single slot (minutes). */
+const SLOT_CLOSE_MINUTES = 30;
+const WEEK_DAYS = 7;
+
+export const getWeekAvailability = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<WeekDay[]> => {
+    await assertAdmin(context as never);
+    const supabase = context.supabase;
+
+    const now = Date.now();
+    const startIso = new Date(now - 86_400_000).toISOString();
+    const endIso = new Date(now + (WEEK_DAYS + 1) * 86_400_000).toISOString();
+
+    const [bookingsRes, blocksRes, extrasRes] = await Promise.all([
+      supabase
+        .from("bookings")
+        .select("starts_at, client_name, status")
+        .neq("status", "cancelled")
+        .gte("starts_at", startIso)
+        .lte("starts_at", endIso),
+      supabase.from("availability_blocks").select("starts_at, ends_at").gte("ends_at", startIso),
+      supabase
+        .from("availability_extras")
+        .select("starts_at")
+        .gte("starts_at", startIso)
+        .lte("starts_at", endIso),
+    ]);
+    if (bookingsRes.error) throw new Error(bookingsRes.error.message);
+    if (blocksRes.error) throw new Error(blocksRes.error.message);
+    if (extrasRes.error) throw new Error(extrasRes.error.message);
+
+    const bookedBy = new Map<string, { clientName: string; status: string }>();
+    for (const b of bookingsRes.data ?? []) {
+      bookedBy.set(new Date(b.starts_at as string).toISOString(), {
+        clientName: b.client_name as string,
+        status: b.status as string,
+      });
+    }
+    const ranges = (blocksRes.data ?? []).map((b) => [
+      new Date(b.starts_at as string).getTime(),
+      new Date(b.ends_at as string).getTime(),
+    ]) as [number, number][];
+
+    const extrasByDay = new Map<string, string[]>();
+    for (const e of extrasRes.data ?? []) {
+      const iso = new Date(e.starts_at as string).toISOString();
+      const key = practiceDateKey(new Date(iso));
+      extrasByDay.set(key, [...(extrasByDay.get(key) ?? []), iso]);
+    }
+
+    const days: WeekDay[] = [];
+    for (let i = 0; i < WEEK_DAYS; i++) {
+      const dateKey = practiceDateKey(new Date(now + i * 86_400_000));
+      const weekday = new Date(`${dateKey}T12:00:00Z`).getUTCDay();
+      const rule = site.availability.days.find((d) => d.weekday === weekday);
+      const extras = extrasByDay.get(dateKey) ?? [];
+
+      const seen = new Set<string>();
+      const slots: WeekSlot[] = [];
+      const candidates: { iso: string; source: "weekly" | "extra" }[] = [
+        ...(rule?.times ?? []).map((time) => ({
+          iso: practiceTimeToUtc(dateKey, time).toISOString(),
+          source: "weekly" as const,
+        })),
+        ...extras.map((iso) => ({ iso, source: "extra" as const })),
+      ];
+
+      for (const c of candidates) {
+        if (seen.has(c.iso)) continue;
+        seen.add(c.iso);
+        const t = new Date(c.iso).getTime();
+        const booking = bookedBy.get(c.iso);
+        const closed = ranges.some(([start, end]) => t >= start && t < end);
+        const state: WeekSlot["state"] = booking
+          ? "booked"
+          : closed
+            ? "closed"
+            : t <= now
+              ? "past"
+              : "open";
+        slots.push({
+          iso: c.iso,
+          time: formatPracticeTime(c.iso),
+          state,
+          source: c.source,
+          ...(booking
+            ? { clientName: booking.clientName, bookingStatus: booking.status }
+            : {}),
+        });
+      }
+
+      slots.sort((a, b) => a.iso.localeCompare(b.iso));
+      days.push({ date: dateKey, label: formatPracticeDate(`${dateKey}T12:00:00Z`), slots });
+    }
+    return days;
+  });
+
+export const addAvailabilitySlot = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ date: z.string().min(8), time: z.string().min(4) }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as never);
+    const start = practiceTimeToUtc(data.date, data.time);
+    if (Number.isNaN(start.getTime())) return { ok: false, error: "That date and time isn't valid." };
+    if (start.getTime() <= Date.now()) return { ok: false, error: "Choose a time in the future." };
+
+    const iso = start.toISOString();
+    const { data: existing } = await context.supabase
+      .from("bookings")
+      .select("id")
+      .eq("starts_at", iso)
+      .neq("status", "cancelled")
+      .maybeSingle();
+    if (existing) return { ok: false, error: "There is already a session booked at that time." };
+
+    // Re-opening a time that was previously closed off.
+    const { data: blocks } = await context.supabase
+      .from("availability_blocks")
+      .select("id, starts_at, ends_at");
+    for (const b of blocks ?? []) {
+      const s = new Date(b.starts_at as string).getTime();
+      const e = new Date(b.ends_at as string).getTime();
+      if (start.getTime() >= s && start.getTime() < e) {
+        await context.supabase.from("availability_blocks").delete().eq("id", b.id as string);
+      }
+    }
+
+    const { error } = await context.supabase
+      .from("availability_extras")
+      .upsert({ starts_at: iso }, { onConflict: "starts_at" });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const closeAvailabilitySlot = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ iso: z.string().min(10) }).parse(data))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as never);
+    const start = new Date(data.iso);
+    if (Number.isNaN(start.getTime())) return { ok: false, error: "That time isn't valid." };
+
+    const { data: booked } = await context.supabase
+      .from("bookings")
+      .select("id")
+      .eq("starts_at", start.toISOString())
+      .neq("status", "cancelled")
+      .maybeSingle();
+    if (booked) {
+      return { ok: false, error: "That time has a session booked — cancel the session first." };
+    }
+
+    await context.supabase.from("availability_extras").delete().eq("starts_at", start.toISOString());
+
+    const { error } = await context.supabase.from("availability_blocks").insert({
+      starts_at: start.toISOString(),
+      ends_at: new Date(start.getTime() + SLOT_CLOSE_MINUTES * 60_000).toISOString(),
+      reason: "Single time closed",
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const reopenAvailabilitySlot = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ iso: z.string().min(10) }).parse(data))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as never);
+    const start = new Date(data.iso);
+    if (Number.isNaN(start.getTime())) return { ok: false, error: "That time isn't valid." };
+    const t = start.getTime();
+
+    const { data: blocks, error } = await context.supabase
+      .from("availability_blocks")
+      .select("id, starts_at, ends_at, reason");
+    if (error) throw new Error(error.message);
+
+    for (const b of blocks ?? []) {
+      const s = new Date(b.starts_at as string).getTime();
+      const e = new Date(b.ends_at as string).getTime();
+      if (t < s || t >= e) continue;
+      if (s >= t && e <= t + SLOT_CLOSE_MINUTES * 60_000) {
+        await context.supabase.from("availability_blocks").delete().eq("id", b.id as string);
+      } else {
+        // Part of a longer time-off period: trim it around this slot.
+        await context.supabase
+          .from("availability_blocks")
+          .update({ ends_at: new Date(t).toISOString() })
+          .eq("id", b.id as string);
+        const tail = t + SLOT_CLOSE_MINUTES * 60_000;
+        if (e > tail) {
+          await context.supabase.from("availability_blocks").insert({
+            starts_at: new Date(tail).toISOString(),
+            ends_at: new Date(e).toISOString(),
+            reason: (b.reason as string) ?? "",
+          });
+        }
+      }
+    }
     return { ok: true };
   });
