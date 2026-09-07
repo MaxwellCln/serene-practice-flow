@@ -22,7 +22,11 @@ import { useSession } from "@/hooks/use-session";
 import { claimFirstAdmin, getMyAccount } from "@/lib/account.functions";
 import {
   addAvailabilityBlock,
+  addAvailabilitySlot,
+  closeAvailabilitySlot,
   getAdminData,
+  getWeekAvailability,
+  reopenAvailabilitySlot,
   removeAvailabilityBlock,
   setServiceActive,
   updateBookingAdmin,
@@ -33,12 +37,6 @@ import {
   revokeAdminInvite,
 } from "@/lib/admin-invite.functions";
 import { listAvailability } from "@/lib/booking.functions";
-import {
-  addAvailabilitySlot,
-  closeAvailabilitySlot,
-  getWeekAvailability,
-  reopenAvailabilitySlot,
-} from "@/lib/admin.functions";
 import { Badge } from "@/components/ui/badge";
 import {
   formatMoney,
