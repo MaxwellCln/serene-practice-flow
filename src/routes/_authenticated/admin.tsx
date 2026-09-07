@@ -388,14 +388,18 @@ function AdminPage() {
         )}
       </section>
 
+      <WeekAheadEditor isAdmin={isAdmin} />
+
       <section className="mt-14">
-        <h2 className="text-2xl">Weekly availability</h2>
+        <h2 className="text-2xl">Usual weekly pattern</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          These are the times offered to clients each week ({site.availability.timezoneLabel}).
-          Clients can book up to {site.availability.horizonDays} days ahead and must book, move or
-          cancel at least {site.availability.noticeHours} hours in advance. To change the weekly
-          pattern, ask your website contact to update the practice hours.
+          These are the times offered to clients most weeks ({site.availability.timezoneLabel}).
+          Use the week ahead above to open or close individual times. Clients can book up to{" "}
+          {site.availability.horizonDays} days ahead and must book, move or cancel at least{" "}
+          {site.availability.noticeHours} hours in advance. To change the standing pattern, ask
+          your website contact to update the practice hours.
         </p>
+
         <ul className="mt-5 grid gap-3 sm:grid-cols-2">
           {site.availability.days.map((day) => (
             <li key={day.weekday} className="rounded-2xl border border-border bg-card p-5">
