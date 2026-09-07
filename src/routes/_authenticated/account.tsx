@@ -66,8 +66,21 @@ function AccountPage() {
   const fetchAvailability = useServerFn(listAvailability);
   const removeAccount = useServerFn(deleteMyAccount);
 
-  const account = useQuery({ queryKey: ["account"], queryFn: () => fetchAccount({}) });
-  const bookings = useQuery({ queryKey: ["my-bookings"], queryFn: () => fetchBookings({}) });
+  const { session } = useSession();
+  const signedIn = Boolean(session);
+
+  const account = useQuery({
+    queryKey: ["account"],
+    queryFn: () => fetchAccount({}),
+    enabled: signedIn,
+    retry: false,
+  });
+  const bookings = useQuery({
+    queryKey: ["my-bookings"],
+    queryFn: () => fetchBookings({}),
+    enabled: signedIn,
+    retry: false,
+  });
 
   const [form, setForm] = useState({ fullName: "", phone: "" });
   const [saving, setSaving] = useState(false);
