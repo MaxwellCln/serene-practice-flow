@@ -32,7 +32,14 @@ import {
   listAdminInvites,
   revokeAdminInvite,
 } from "@/lib/admin-invite.functions";
-import { formatMoney, formatPracticeDate, formatPracticeTime } from "@/lib/time";
+import { listAvailability } from "@/lib/booking.functions";
+import { Badge } from "@/components/ui/badge";
+import {
+  formatMoney,
+  formatPracticeDate,
+  formatPracticeTime,
+  practiceDateKey,
+} from "@/lib/time";
 
 /** Only this address may claim the very first dashboard access. */
 const BOOTSTRAP_ADMIN_EMAIL = "mclein568@gmail.com";
@@ -68,6 +75,7 @@ function AdminPage() {
   const toggleService = useServerFn(setServiceActive);
   const addBlock = useServerFn(addAvailabilityBlock);
   const deleteBlock = useServerFn(removeAvailabilityBlock);
+  const fetchAvailability = useServerFn(listAvailability);
 
   const { session } = useSession();
   const account = useQuery({
@@ -84,9 +92,18 @@ function AdminPage() {
     enabled: isAdmin,
   });
 
+  const availability = useQuery({
+    queryKey: ["admin-availability"],
+    queryFn: () => fetchAvailability({}),
+    enabled: isAdmin,
+  });
+
   const [block, setBlock] = useState({ startsAt: "", endsAt: "", reason: "" });
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ["admin-data"] });
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["admin-data"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-availability"] });
+  };
 
   if (!session || account.isLoading) {
     return <Shell>Loading…</Shell>;
@@ -142,22 +159,152 @@ function AdminPage() {
   const bookings = data.data?.bookings ?? [];
   const services = data.data?.services ?? [];
   const blocks = data.data?.blocks ?? [];
-  const upcoming = bookings.filter((b) => new Date(b.startsAt) >= new Date());
+  const now = new Date();
+  const upcoming = bookings.filter(
+    (b) => new Date(b.startsAt) >= now && b.status !== "cancelled",
+  );
+  const openSlots = (availability.data ?? []).reduce((sum, d) => sum + d.slots.length, 0);
+
+  // Group upcoming sessions and free slots by day, so the next fortnight reads at a glance.
+  const dayMap = new Map<
+    string,
+    { label: string; sessions: typeof upcoming; slots: { time: string; iso: string }[] }
+  >();
+  for (const b of upcoming) {
+    const key = practiceDateKey(new Date(b.startsAt));
+    const entry = dayMap.get(key) ?? { label: formatPracticeDate(b.startsAt), sessions: [], slots: [] };
+    entry.sessions.push(b);
+    dayMap.set(key, entry);
+  }
+  for (const day of availability.data ?? []) {
+    const entry =
+      dayMap.get(day.date) ??
+      { label: formatPracticeDate(`${day.date}T12:00:00Z`), sessions: [], slots: [] };
+    entry.slots = day.slots;
+    dayMap.set(day.date, entry);
+  }
+  const scheduleDays = [...dayMap.entries()].sort(([a], [b]) => a.localeCompare(b)).slice(0, 14);
 
   return (
     <Shell>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-4xl">Practice dashboard</h1>
-          <p className="mt-2 text-muted-foreground">
-            {upcoming.length} upcoming {upcoming.length === 1 ? "session" : "sessions"} ·{" "}
-            {bookings.length} total
-          </p>
+      <div className="rounded-3xl border border-border bg-secondary/40 p-6 sm:p-8">
+        <div className="flex flex-wrap items-center gap-3">
+          <Badge className="rounded-full px-3 py-1 text-xs uppercase tracking-wide">
+            Admin dashboard
+          </Badge>
+          <span className="text-sm text-muted-foreground">
+            Signed in as{" "}
+            <span className="font-medium text-foreground">{account.data?.email}</span>
+          </span>
         </div>
-        <Button asChild variant="secondary" className="rounded-full">
-          <Link to="/account">Your account</Link>
-        </Button>
+        <h1 className="mt-4 text-3xl sm:text-4xl">Valerie&apos;s practice dashboard</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Private to the practice team. Client details are never shown anywhere else on the site.
+        </p>
+        <dl className="mt-6 grid gap-3 sm:grid-cols-3">
+          {[
+            { label: "Upcoming sessions", value: upcoming.length },
+            { label: "Open slots (next 28 days)", value: openSlots },
+            { label: "Bookings all time", value: bookings.length },
+          ].map((stat) => (
+            <div key={stat.label} className="rounded-2xl border border-border bg-card px-4 py-3">
+              <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+                {stat.label}
+              </dt>
+              <dd className="font-display text-2xl">{stat.value}</dd>
+            </div>
+          ))}
+        </dl>
+        <div className="mt-6">
+          <Button asChild variant="secondary" className="rounded-full">
+            <Link to="/account">Your account</Link>
+          </Button>
+        </div>
       </div>
+
+      <section className="mt-12">
+        <h2 className="text-2xl">Schedule at a glance</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Upcoming client sessions and the slots still free, in {site.availability.timezoneLabel}.
+        </p>
+        {data.isLoading || availability.isLoading ? (
+          <p className="mt-4 text-sm text-muted-foreground">Loading…</p>
+        ) : scheduleDays.length === 0 ? (
+          <p className="mt-4 rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+            Nothing scheduled and no slots open yet. Check the weekly availability and time-off
+            settings below.
+          </p>
+        ) : (
+          <ul className="mt-5 grid gap-4">
+            {scheduleDays.map(([key, day]) => (
+              <li key={key} className="rounded-2xl border border-border bg-card p-5">
+                <p className="font-display text-lg">{day.label}</p>
+                {day.sessions.length === 0 ? (
+                  <p className="mt-2 text-sm text-muted-foreground">No sessions booked.</p>
+                ) : (
+                  <ul className="mt-3 grid gap-3">
+                    {day.sessions
+                      .slice()
+                      .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
+                      .map((b) => (
+                        <li
+                          key={b.id}
+                          className="rounded-xl border border-border bg-background p-4"
+                        >
+                          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                            <span className="font-display text-base">
+                              {formatPracticeTime(b.startsAt)}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {b.serviceTitle} · {b.durationMinutes} min
+                            </span>
+                            <Badge variant="secondary" className="rounded-full">
+                              {b.status}
+                            </Badge>
+                            <Badge variant="outline" className="rounded-full">
+                              {b.paymentStatus.replace("_", " ")}
+                            </Badge>
+                          </div>
+                          <p className="mt-2 break-words text-sm">
+                            {b.clientName} ·{" "}
+                            <a className="underline" href={`mailto:${b.clientEmail}`}>
+                              {b.clientEmail}
+                            </a>
+                            {b.clientPhone ? (
+                              <>
+                                {" · "}
+                                <a className="underline" href={`tel:${b.clientPhone}`}>
+                                  {b.clientPhone}
+                                </a>
+                              </>
+                            ) : null}
+                          </p>
+                        </li>
+                      ))}
+                  </ul>
+                )}
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Free slots
+                  </span>
+                  {day.slots.length === 0 ? (
+                    <span className="text-sm text-muted-foreground">None left this day.</span>
+                  ) : (
+                    day.slots.map((s) => (
+                      <span
+                        key={s.iso}
+                        className="rounded-full border border-border px-3 py-1 text-sm text-muted-foreground"
+                      >
+                        {s.time}
+                      </span>
+                    ))
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section className="mt-10 rounded-2xl border border-border bg-muted/40 p-5">
         <p className="text-sm text-muted-foreground">
@@ -167,8 +314,9 @@ function AdminPage() {
         </p>
       </section>
 
+
       <section className="mt-12">
-        <h2 className="text-2xl">Bookings</h2>
+        <h2 className="text-2xl">All bookings</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Change a session&apos;s status (including cancelling it) and record payment here.
         </p>
@@ -340,6 +488,9 @@ function AdminPage() {
           </Button>
         </form>
 
+        {blocks.length === 0 && (
+          <p className="mt-6 text-sm text-muted-foreground">No time off blocked at the moment.</p>
+        )}
         <ul className="mt-6 grid gap-2">
           {blocks.map((b) => (
             <li
