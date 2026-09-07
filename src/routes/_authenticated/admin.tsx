@@ -86,9 +86,18 @@ function AdminPage() {
     enabled: isAdmin,
   });
 
+  const availability = useQuery({
+    queryKey: ["admin-availability"],
+    queryFn: () => fetchAvailability({}),
+    enabled: isAdmin,
+  });
+
   const [block, setBlock] = useState({ startsAt: "", endsAt: "", reason: "" });
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ["admin-data"] });
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["admin-data"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-availability"] });
+  };
 
   if (!session || account.isLoading) {
     return <Shell>Loading…</Shell>;
