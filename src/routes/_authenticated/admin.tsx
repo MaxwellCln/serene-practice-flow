@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { site } from "@/content/site";
+import { useSession } from "@/hooks/use-session";
 import { claimFirstAdmin, getMyAccount } from "@/lib/account.functions";
 import {
   addAvailabilityBlock,
@@ -68,7 +69,13 @@ function AdminPage() {
   const addBlock = useServerFn(addAvailabilityBlock);
   const deleteBlock = useServerFn(removeAvailabilityBlock);
 
-  const account = useQuery({ queryKey: ["account"], queryFn: () => fetchAccount({}) });
+  const { session } = useSession();
+  const account = useQuery({
+    queryKey: ["account"],
+    queryFn: () => fetchAccount({}),
+    enabled: Boolean(session),
+    retry: false,
+  });
   const isAdmin = account.data?.isAdmin ?? false;
 
   const data = useQuery({
@@ -81,7 +88,7 @@ function AdminPage() {
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["admin-data"] });
 
-  if (account.isLoading) {
+  if (!session || account.isLoading) {
     return <Shell>Loading…</Shell>;
   }
 
