@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { site } from "@/content/site";
+import { useSession } from "@/hooks/use-session";
 import { deleteMyAccount, getMyAccount, updateMyProfile } from "@/lib/account.functions";
 import {
   CHANGE_CUTOFF_HOURS,
@@ -65,8 +66,21 @@ function AccountPage() {
   const fetchAvailability = useServerFn(listAvailability);
   const removeAccount = useServerFn(deleteMyAccount);
 
-  const account = useQuery({ queryKey: ["account"], queryFn: () => fetchAccount({}) });
-  const bookings = useQuery({ queryKey: ["my-bookings"], queryFn: () => fetchBookings({}) });
+  const { session } = useSession();
+  const signedIn = Boolean(session);
+
+  const account = useQuery({
+    queryKey: ["account"],
+    queryFn: () => fetchAccount({}),
+    enabled: signedIn,
+    retry: false,
+  });
+  const bookings = useQuery({
+    queryKey: ["my-bookings"],
+    queryFn: () => fetchBookings({}),
+    enabled: signedIn,
+    retry: false,
+  });
 
   const [form, setForm] = useState({ fullName: "", phone: "" });
   const [saving, setSaving] = useState(false);
@@ -173,7 +187,7 @@ function AccountPage() {
             You can reschedule or cancel online up to {CHANGE_CUTOFF_HOURS} hours before a session.
             Closer than that, please contact the practice on {site.phone}.
           </p>
-          {bookings.isLoading ? (
+          {!signedIn || bookings.isLoading ? (
             <p className="mt-4 text-sm text-muted-foreground">Loading…</p>
           ) : (bookings.data ?? []).length === 0 ? (
             <p className="mt-4 text-sm text-muted-foreground">
