@@ -70,6 +70,7 @@ function AdminPage() {
   const toggleService = useServerFn(setServiceActive);
   const addBlock = useServerFn(addAvailabilityBlock);
   const deleteBlock = useServerFn(removeAvailabilityBlock);
+  const fetchAvailability = useServerFn(listAvailability);
 
   const { session } = useSession();
   const account = useQuery({
