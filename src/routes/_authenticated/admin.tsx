@@ -32,6 +32,8 @@ import {
   listAdminInvites,
   revokeAdminInvite,
 } from "@/lib/admin-invite.functions";
+import { listAvailability } from "@/lib/booking.functions";
+import { Badge } from "@/components/ui/badge";
 import { formatMoney, formatPracticeDate, formatPracticeTime } from "@/lib/time";
 
 /** Only this address may claim the very first dashboard access. */
