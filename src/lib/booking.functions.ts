@@ -206,14 +206,16 @@ export const createBooking = createServerFn({ method: "POST" })
       .update({ full_name: data.name, phone: data.phone || null })
       .eq("id", context.userId);
 
-    const emailSent = await notifyBooking("confirmation", {
-      to: data.email,
-      clientName: data.name,
-      serviceTitle: service.title as string,
-      startsAt: startsAt.toISOString(),
-      durationMinutes: service.duration_minutes as number,
-      ...(data.origin ? { origin: safeOrigin(data.origin) } : {}),
-    });
+    // Confirmation and practice notification go out once the booking is
+    // confirmed. Paid sessions are confirmed after payment succeeds.
+    let emailSent = false;
+    if (!service.requires_payment) {
+      const { notifyBookingConfirmed } = await import("@/lib/booking-notify.server");
+      const outcome = await notifyBookingConfirmed(booking.id as string, {
+        ...(data.origin ? { origin: safeOrigin(data.origin) } : {}),
+      });
+      emailSent = outcome.clientEmailSent;
+    }
 
     return {
       bookingId: booking.id as string,
@@ -326,11 +328,15 @@ async function notifyBooking(
     serviceTitle: string;
     startsAt: string;
     durationMinutes: number;
+    isOnline?: boolean;
     origin?: string;
     previousStartsAt?: string;
   },
 ) {
-  const { sendBookingEmail } = await import("@/lib/booking-email.server");
+  const { sendBookingEmail, safeMeetingLink } = await import("@/lib/booking-email.server");
+  const { loadPracticeSettings } = await import("@/lib/booking-notify.server");
+  const settings = await loadPracticeSettings();
+  const meetingLink = args.isOnline ? safeMeetingLink(settings.meetingLink) : "";
   const result = await sendBookingEmail(args.to, {
     kind,
     practiceName: site.practiceName,
@@ -342,6 +348,8 @@ async function notifyBooking(
     manageUrl: args.origin ? `${args.origin}/account` : "",
     practiceEmail: site.email,
     practicePhone: site.phone,
+    ...(meetingLink ? { meetingLink } : {}),
+    ...(meetingLink && settings.meetingNote ? { meetingNote: settings.meetingNote } : {}),
     ...(args.previousStartsAt ? { previousStartsAt: args.previousStartsAt } : {}),
   });
   return result.sent;
