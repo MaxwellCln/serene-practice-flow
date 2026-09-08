@@ -296,7 +296,7 @@ async function loadOwnBooking(supabase: SupabaseLike, id: string, userId: string
   const { data, error } = await supabase
     .from("bookings")
     .select(
-      "id, starts_at, duration_minutes, status, client_name, client_email, service_id, services(title)",
+      "id, starts_at, duration_minutes, status, client_name, client_email, service_id, services(title, is_online)",
     )
     .eq("id", id)
     .eq("user_id", userId)
@@ -313,7 +313,7 @@ type BookingRow = {
   client_name: string;
   client_email: string;
   service_id: string;
-  services?: { title?: string } | null;
+  services?: { title?: string; is_online?: boolean } | null;
 };
 
 type SupabaseLike = { from: (table: string) => any };
@@ -382,6 +382,7 @@ export const cancelMyBooking = createServerFn({ method: "POST" })
       serviceTitle: booking.services?.title ?? "Session",
       startsAt: booking.starts_at,
       durationMinutes: booking.duration_minutes,
+      isOnline: Boolean(booking.services?.is_online),
       ...(data.origin ? { origin: safeOrigin(data.origin) } : {}),
     });
 
@@ -456,6 +457,7 @@ export const rescheduleMyBooking = createServerFn({ method: "POST" })
       serviceTitle: booking.services?.title ?? "Session",
       startsAt: next.toISOString(),
       durationMinutes: booking.duration_minutes,
+      isOnline: Boolean(booking.services?.is_online),
       previousStartsAt: booking.starts_at,
       ...(data.origin ? { origin: safeOrigin(data.origin) } : {}),
     });
