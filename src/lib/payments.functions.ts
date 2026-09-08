@@ -35,6 +35,8 @@ export const startCheckout = createServerFn({ method: "POST" })
         .from("bookings")
         .update({ status: "confirmed", payment_status: "invoice_pending" })
         .eq("id", booking.id);
+      const { notifyBookingConfirmed } = await import("@/lib/booking-notify.server");
+      await notifyBookingConfirmed(String(booking.id), { origin: data.origin });
       return { status: "unconfigured" };
     }
 
@@ -76,7 +78,13 @@ export const startCheckout = createServerFn({ method: "POST" })
 /** Verifies a returning Stripe Checkout session and marks the booking paid. */
 export const confirmCheckout = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) =>
-    z.object({ bookingId: z.string().uuid(), sessionId: z.string().min(1).max(255) }).parse(data),
+    z
+      .object({
+        bookingId: z.string().uuid(),
+        sessionId: z.string().min(1).max(255),
+        origin: z.string().trim().max(300).optional(),
+      })
+      .parse(data),
   )
   .handler(async ({ data }) => {
     const secretKey = process.env["STRIPE_SECRET_KEY"];
