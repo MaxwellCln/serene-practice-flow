@@ -103,9 +103,19 @@ export const confirmCheckout = createServerFn({ method: "POST" })
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin
+    // Only the first successful confirmation triggers emails.
+    const { data: updated } = await supabaseAdmin
       .from("bookings")
       .update({ status: "confirmed", payment_status: "paid", payment_reference: data.sessionId })
-      .eq("id", data.bookingId);
+      .eq("id", data.bookingId)
+      .neq("payment_status", "paid")
+      .select("id");
+
+    if (updated && updated.length > 0) {
+      const { notifyBookingConfirmed } = await import("@/lib/booking-notify.server");
+      await notifyBookingConfirmed(data.bookingId, {
+        ...(data.origin ? { origin: data.origin } : {}),
+      });
+    }
     return { paid: true };
   });
