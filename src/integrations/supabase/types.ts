@@ -163,6 +163,30 @@ export type Database = {
           },
         ]
       }
+      practice_settings: {
+        Row: {
+          id: boolean
+          meeting_link: string
+          meeting_note: string
+          notification_email: string
+          updated_at: string
+        }
+        Insert: {
+          id?: boolean
+          meeting_link?: string
+          meeting_note?: string
+          notification_email?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: boolean
+          meeting_link?: string
+          meeting_note?: string
+          notification_email?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -198,6 +222,7 @@ export type Database = {
           duration_minutes: number
           id: string
           is_active: boolean
+          is_online: boolean
           price_cents: number
           requires_payment: boolean
           slug: string
@@ -211,6 +236,7 @@ export type Database = {
           duration_minutes?: number
           id?: string
           is_active?: boolean
+          is_online?: boolean
           price_cents?: number
           requires_payment?: boolean
           slug: string
@@ -224,6 +250,7 @@ export type Database = {
           duration_minutes?: number
           id?: string
           is_active?: boolean
+          is_online?: boolean
           price_cents?: number
           requires_payment?: boolean
           slug?: string
