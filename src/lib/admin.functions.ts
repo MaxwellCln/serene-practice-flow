@@ -32,6 +32,7 @@ export type AdminService = {
   currency: string;
   durationMinutes: number;
   isActive: boolean;
+  isOnline: boolean;
 };
 
 export type AdminBlock = {
@@ -73,7 +74,7 @@ export const getAdminData = createServerFn({ method: "GET" })
         .order("starts_at", { ascending: true }),
       supabase
         .from("services")
-        .select("id, title, slug, price_cents, currency, duration_minutes, is_active")
+        .select("id, title, slug, price_cents, currency, duration_minutes, is_active, is_online")
         .order("sort_order", { ascending: true }),
       supabase
         .from("availability_blocks")
@@ -107,6 +108,7 @@ export const getAdminData = createServerFn({ method: "GET" })
         currency: s.currency as string,
         durationMinutes: s.duration_minutes as number,
         isActive: Boolean(s.is_active),
+        isOnline: Boolean(s.is_online),
       })),
       blocks: (blocksRes.data ?? []).map((b) => ({
         id: b.id as string,
@@ -410,5 +412,79 @@ export const reopenAvailabilitySlot = createServerFn({ method: "POST" })
         }
       }
     }
+    return { ok: true };
+  });
+
+/** ── Booking communications settings ───────────────────────────── */
+
+export type AdminSettings = {
+  notificationEmail: string;
+  meetingLink: string;
+  meetingNote: string;
+  /** True when a verified sending domain is configured, so email can go out. */
+  emailConfigured: boolean;
+};
+
+export const getPracticeSettings = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<AdminSettings> => {
+    await assertAdmin(context as never);
+    const { data, error } = await context.supabase
+      .from("practice_settings")
+      .select("notification_email, meeting_link, meeting_note")
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    const { emailDeliveryConfigured } = await import("@/lib/booking-email.server");
+    return {
+      notificationEmail: (data?.notification_email as string) ?? "",
+      meetingLink: (data?.meeting_link as string) ?? "",
+      meetingNote: (data?.meeting_note as string) ?? "",
+      emailConfigured: emailDeliveryConfigured(),
+    };
+  });
+
+export const updatePracticeSettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        notificationEmail: z.string().trim().max(255).email().or(z.literal("")),
+        meetingLink: z.string().trim().max(600),
+        meetingNote: z.string().trim().max(300),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as never);
+    if (data.meetingLink) {
+      const { safeMeetingLink } = await import("@/lib/booking-email.server");
+      if (!safeMeetingLink(data.meetingLink)) {
+        return { ok: false, error: "The meeting link must be a full https:// address." };
+      }
+    }
+    const { error } = await context.supabase
+      .from("practice_settings")
+      .update({
+        notification_email: data.notificationEmail.toLowerCase(),
+        meeting_link: data.meetingLink,
+        meeting_note: data.meetingNote,
+      })
+      .eq("id", true);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const setServiceOnline = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ id: z.string().uuid(), isOnline: z.boolean() }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as never);
+    const { error } = await context.supabase
+      .from("services")
+      .update({ is_online: data.isOnline })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
     return { ok: true };
   });
