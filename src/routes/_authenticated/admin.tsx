@@ -310,13 +310,7 @@ function AdminPage() {
         )}
       </section>
 
-      <section className="mt-10 rounded-2xl border border-border bg-muted/40 p-5">
-        <p className="text-sm text-muted-foreground">
-          Automatic booking emails to clients are ready to go, but they can only be sent once a
-          verified sending domain is set up for the practice. Until then clients see their session
-          details on screen and in their own account, and no email is sent.
-        </p>
-      </section>
+      <BookingEmailSettings isAdmin={isAdmin} />
 
 
       <section className="mt-12">
@@ -428,16 +422,28 @@ function AdminPage() {
                   {s.durationMinutes} min · {formatMoney(s.priceCents, s.currency)}
                 </p>
               </div>
-              <label className="flex items-center gap-3 text-sm text-muted-foreground">
-                Bookable
-                <Switch
-                  checked={s.isActive}
-                  onCheckedChange={async (checked) => {
-                    await toggleService({ data: { id: s.id, isActive: checked } });
-                    refresh();
-                  }}
-                />
-              </label>
+              <div className="flex flex-wrap items-center gap-6">
+                <label className="flex items-center gap-3 text-sm text-muted-foreground">
+                  Bookable
+                  <Switch
+                    checked={s.isActive}
+                    onCheckedChange={async (checked) => {
+                      await toggleService({ data: { id: s.id, isActive: checked } });
+                      refresh();
+                    }}
+                  />
+                </label>
+                <label className="flex items-center gap-3 text-sm text-muted-foreground">
+                  Held online
+                  <Switch
+                    checked={s.isOnline}
+                    onCheckedChange={async (checked) => {
+                      await toggleOnline({ data: { id: s.id, isOnline: checked } });
+                      refresh();
+                    }}
+                  />
+                </label>
+              </div>
             </li>
           ))}
         </ul>
