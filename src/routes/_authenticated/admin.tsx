@@ -25,11 +25,14 @@ import {
   addAvailabilitySlot,
   closeAvailabilitySlot,
   getAdminData,
+  getPracticeSettings,
   getWeekAvailability,
   reopenAvailabilitySlot,
   removeAvailabilityBlock,
   setServiceActive,
+  setServiceOnline,
   updateBookingAdmin,
+  updatePracticeSettings,
 } from "@/lib/admin.functions";
 import {
   createAdminInvite,
@@ -77,6 +80,7 @@ function AdminPage() {
   const claimAdmin = useServerFn(claimFirstAdmin);
   const patchBooking = useServerFn(updateBookingAdmin);
   const toggleService = useServerFn(setServiceActive);
+  const toggleOnline = useServerFn(setServiceOnline);
   const addBlock = useServerFn(addAvailabilityBlock);
   const deleteBlock = useServerFn(removeAvailabilityBlock);
   const fetchAvailability = useServerFn(listAvailability);
@@ -838,6 +842,130 @@ function WeekAheadEditor({ isAdmin }: { isAdmin: boolean }) {
           ))}
         </ul>
       )}
+    </section>
+  );
+}
+
+
+/** Where new-booking notifications go, and the link used for online sessions. */
+function BookingEmailSettings({ isAdmin }: { isAdmin: boolean }) {
+  const queryClient = useQueryClient();
+  const fetchSettings = useServerFn(getPracticeSettings);
+  const saveSettings = useServerFn(updatePracticeSettings);
+  const settings = useQuery({
+    queryKey: ["practice-settings"],
+    queryFn: () => fetchSettings(),
+    enabled: isAdmin,
+    retry: false,
+  });
+
+  const [form, setForm] = useState<{
+    notificationEmail: string;
+    meetingLink: string;
+    meetingNote: string;
+  } | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  if (!isAdmin) return null;
+
+  const current = form ?? {
+    notificationEmail: settings.data?.notificationEmail ?? "",
+    meetingLink: settings.data?.meetingLink ?? "",
+    meetingNote: settings.data?.meetingNote ?? "",
+  };
+  const emailConfigured = settings.data?.emailConfigured ?? false;
+
+  return (
+    <section className="mt-12 rounded-3xl border border-border bg-card p-6 sm:p-8">
+      <h2 className="text-2xl">Booking emails &amp; online sessions</h2>
+      <p className="mt-2 text-sm text-muted-foreground">
+        When a session is booked and confirmed, the client gets a confirmation and you get a
+        notification. Notes clients write during booking are never included in these emails.
+      </p>
+
+      <div
+        className={
+          emailConfigured
+            ? "mt-5 rounded-2xl border border-border bg-muted/40 p-4 text-sm"
+            : "mt-5 rounded-2xl border border-destructive/40 bg-destructive/5 p-4 text-sm"
+        }
+      >
+        {emailConfigured ? (
+          <p>Emails are being sent from the practice&apos;s verified sending address.</p>
+        ) : (
+          <p>
+            No verified sending address is connected yet, so <strong>no emails are being sent</strong>.
+            Session details still appear on screen and in each client&apos;s account. Ask your
+            website contact to connect the practice&apos;s own email domain to switch sending on.
+          </p>
+        )}
+      </div>
+
+      <form
+        className="mt-6 grid gap-5"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          setSaving(true);
+          try {
+            const result = await saveSettings({ data: current });
+            if (!result.ok) {
+              toast.error(result.error ?? "Please check the details and try again.");
+              return;
+            }
+            toast.success("Saved.");
+            await queryClient.invalidateQueries({ queryKey: ["practice-settings"] });
+            setForm(null);
+          } finally {
+            setSaving(false);
+          }
+        }}
+      >
+        <div className="grid gap-2">
+          <Label htmlFor="notify-email">Send new booking notifications to</Label>
+          <Input
+            id="notify-email"
+            type="email"
+            placeholder="valerie@example-practice.ie"
+            value={current.notificationEmail}
+            onChange={(e) => setForm({ ...current, notificationEmail: e.target.value })}
+          />
+          <p className="text-xs text-muted-foreground">
+            Leave empty and no notification is sent — bookings still appear on this dashboard.
+          </p>
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="meeting-link">Online meeting link (Teams or similar)</Label>
+          <Input
+            id="meeting-link"
+            placeholder="https://teams.microsoft.com/l/meetup-join/..."
+            value={current.meetingLink}
+            onChange={(e) => setForm({ ...current, meetingLink: e.target.value })}
+          />
+          <p className="text-xs text-muted-foreground">
+            Must start with https://. It is added to confirmation emails only for session types
+            marked &ldquo;Held online&rdquo; below. Without a link, those emails simply say the
+            session is online and the link will follow.
+          </p>
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="meeting-note">Short joining note (optional)</Label>
+          <Input
+            id="meeting-note"
+            maxLength={300}
+            placeholder="Please join a couple of minutes early; the room opens 10 minutes before."
+            value={current.meetingNote}
+            onChange={(e) => setForm({ ...current, meetingNote: e.target.value })}
+          />
+        </div>
+
+        <div>
+          <Button type="submit" className="rounded-full" disabled={saving}>
+            {saving ? "Saving…" : "Save settings"}
+          </Button>
+        </div>
+      </form>
     </section>
   );
 }
