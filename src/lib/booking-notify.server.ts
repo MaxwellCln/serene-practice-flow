@@ -7,6 +7,8 @@
  * exactly what did not happen instead of being told an email was sent.
  */
 
+import { getRequest } from "@tanstack/react-start/server";
+
 import { site } from "@/content/site";
 import {
   safeMeetingLink,
@@ -35,6 +37,15 @@ export async function loadPracticeSettings(): Promise<PracticeSettings> {
   };
 }
 
+/** Falls back to the current request's origin so links still work. */
+function requestOrigin() {
+  try {
+    return new URL(getRequest().url).origin;
+  } catch {
+    return "";
+  }
+}
+
 export type NotifyOutcome = {
   clientEmailSent: boolean;
   adminEmailSent: boolean;
@@ -54,7 +65,7 @@ export async function notifyBookingConfirmed(
 ): Promise<NotifyOutcome> {
   const kind = options.kind ?? "confirmation";
   const notifyAdmin = options.notifyAdmin ?? kind === "confirmation";
-  const origin = options.origin ?? "";
+  const origin = options.origin || requestOrigin();
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: booking } = await supabaseAdmin
