@@ -35,6 +35,8 @@ export const startCheckout = createServerFn({ method: "POST" })
         .from("bookings")
         .update({ status: "confirmed", payment_status: "invoice_pending" })
         .eq("id", booking.id);
+      const { notifyBookingConfirmed } = await import("@/lib/booking-notify.server");
+      await notifyBookingConfirmed(String(booking.id), { origin: data.origin });
       return { status: "unconfigured" };
     }
 
@@ -76,7 +78,13 @@ export const startCheckout = createServerFn({ method: "POST" })
 /** Verifies a returning Stripe Checkout session and marks the booking paid. */
 export const confirmCheckout = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) =>
-    z.object({ bookingId: z.string().uuid(), sessionId: z.string().min(1).max(255) }).parse(data),
+    z
+      .object({
+        bookingId: z.string().uuid(),
+        sessionId: z.string().min(1).max(255),
+        origin: z.string().trim().max(300).optional(),
+      })
+      .parse(data),
   )
   .handler(async ({ data }) => {
     const secretKey = process.env["STRIPE_SECRET_KEY"];
@@ -95,9 +103,19 @@ export const confirmCheckout = createServerFn({ method: "POST" })
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin
+    // Only the first successful confirmation triggers emails.
+    const { data: updated } = await supabaseAdmin
       .from("bookings")
       .update({ status: "confirmed", payment_status: "paid", payment_reference: data.sessionId })
-      .eq("id", data.bookingId);
+      .eq("id", data.bookingId)
+      .neq("payment_status", "paid")
+      .select("id");
+
+    if (updated && updated.length > 0) {
+      const { notifyBookingConfirmed } = await import("@/lib/booking-notify.server");
+      await notifyBookingConfirmed(data.bookingId, {
+        ...(data.origin ? { origin: data.origin } : {}),
+      });
+    }
     return { paid: true };
   });

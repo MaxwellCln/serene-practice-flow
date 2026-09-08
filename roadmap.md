@@ -6,3 +6,4 @@
 - [x] Secure admin invite flow (one-time expiring links, revocation, email or copy-link fallback)
 - [x] Restrict first admin claim to mclein568@gmail.com (no open claim route)
 - [x] Admin week-ahead availability editing (open/close individual times, extra dates)
+- [x] Booking confirmation + practice notification emails, online meeting link, admin settings
