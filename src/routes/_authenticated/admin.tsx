@@ -84,6 +84,8 @@ function AdminPage() {
   const fetchData = useServerFn(getAdminData);
   const claimAdmin = useServerFn(claimFirstAdmin);
   const patchBooking = useServerFn(updateBookingAdmin);
+  const sendInvoice = useServerFn(sendBookingInvoice);
+  const [invoiceBusyId, setInvoiceBusyId] = useState<string | null>(null);
   const toggleService = useServerFn(setServiceActive);
   const addBlock = useServerFn(addAvailabilityBlock);
   const deleteBlock = useServerFn(removeAvailabilityBlock);
