@@ -354,9 +354,11 @@ function AdminPage() {
 
 
       <section id="admin-bookings" className="mt-12 scroll-mt-48">
-        <h2 className="text-2xl">All bookings</h2>
+        <h2 className="text-2xl">All bookings & intro calls</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Change a session&apos;s status (including cancelling it) and record payment here.
+          Change a session&apos;s status (including cancelling it), record payment, and track the
+          free 15-minute intro call Valerie offers before longer sessions — she texts the client on
+          WhatsApp to arrange a time.
         </p>
         {data.isLoading ? (
           <p className="mt-4 text-sm text-muted-foreground">Loading…</p>
@@ -390,7 +392,7 @@ function AdminPage() {
                 <div className="mt-4 flex flex-wrap items-end gap-3">
                   {b.durationMinutes > 15 && b.status !== "cancelled" && (
                     <div className="grid gap-1">
-                      <span className="text-xs text-muted-foreground">15-min intro call</span>
+                      <span className="text-xs text-muted-foreground">Intro call (WhatsApp)</span>
                       <Select
                         value={b.precallStatus === "none" ? "needs_contact" : b.precallStatus}
                         onValueChange={async (value) => {
@@ -410,7 +412,8 @@ function AdminPage() {
                       </Select>
                     </div>
                   )}
-                  <span className="sr-only">Booking status</span>
+                  <div className="grid gap-1">
+                    <span className="text-xs text-muted-foreground">Booking status</span>
                   <Select
                     value={b.status}
                     onValueChange={async (value) => {
