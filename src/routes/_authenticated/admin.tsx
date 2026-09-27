@@ -27,6 +27,9 @@ import {
   getAdminData,
   getPracticeSettings,
   getWeekAvailability,
+  getWeeklyPattern,
+  addWeeklyTime,
+  removeWeeklyTime,
   reopenAvailabilitySlot,
   removeAvailabilityBlock,
   setServiceActive,
@@ -75,6 +78,7 @@ const statuses = ["pending", "confirmed", "completed", "cancelled"] as const;
 const paymentStatuses = ["unpaid", "invoice_pending", "paid", "refunded", "not_required"] as const;
 
 function AdminPage() {
+  const [section, setSection] = useState("schedule");
   const queryClient = useQueryClient();
   const fetchAccount = useServerFn(getMyAccount);
   const fetchData = useServerFn(getAdminData);
@@ -231,7 +235,28 @@ function AdminPage() {
         </div>
       </div>
 
-      <section className="mt-12">
+      <div className="sticky top-20 z-30 mt-6 border-b border-border bg-background py-3">
+        <Label htmlFor="admin-section" className="mb-2 block text-sm">Jump to a section</Label>
+        <Select value={section} onValueChange={(value) => {
+          setSection(value);
+          document.getElementById(`admin-${value}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}>
+          <SelectTrigger id="admin-section" className="w-full max-w-sm bg-background"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="schedule">Schedule at a glance</SelectItem>
+            <SelectItem value="emails">Booking emails & online sessions</SelectItem>
+            <SelectItem value="bookings">All bookings</SelectItem>
+            <SelectItem value="week">The week ahead</SelectItem>
+            <SelectItem value="posts">Blog & vlog posts</SelectItem>
+            <SelectItem value="pattern">Usual weekly pattern</SelectItem>
+            <SelectItem value="services">Session types</SelectItem>
+            <SelectItem value="time-off">Time off</SelectItem>
+            <SelectItem value="access">Dashboard access</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <section id="admin-schedule" className="mt-12 scroll-mt-48">
         <h2 className="text-2xl">Schedule at a glance</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Upcoming client sessions and the slots still free, in {site.availability.timezoneLabel}.
@@ -318,7 +343,7 @@ function AdminPage() {
       <BookingEmailSettings isAdmin={isAdmin} />
 
 
-      <section className="mt-12">
+      <section id="admin-bookings" className="mt-12 scroll-mt-48">
         <h2 className="text-2xl">All bookings</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Change a session&apos;s status (including cancelling it) and record payment here.
@@ -393,29 +418,11 @@ function AdminPage() {
 
       <WeekAheadEditor isAdmin={isAdmin} />
 
-      <BlogManager />
+      <div id="admin-posts" className="scroll-mt-48"><BlogManager /></div>
 
-      <section className="mt-14">
-        <h2 className="text-2xl">Usual weekly pattern</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          These are the times offered to clients most weeks ({site.availability.timezoneLabel}).
-          Use the week ahead above to open or close individual times. Clients can book up to{" "}
-          {site.availability.horizonDays} days ahead and must book, move or cancel at least{" "}
-          {site.availability.noticeHours} hours in advance. To change the standing pattern, ask
-          your website contact to update the practice hours.
-        </p>
+      <WeeklyPatternEditor isAdmin={isAdmin} />
 
-        <ul className="mt-5 grid gap-3 sm:grid-cols-2">
-          {site.availability.days.map((day) => (
-            <li key={day.weekday} className="rounded-2xl border border-border bg-card p-5">
-              <p className="font-display text-lg">{day.label}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{day.times.join(" · ")}</p>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="mt-14">
+      <section id="admin-services" className="mt-14 scroll-mt-48">
         <h2 className="text-2xl">Session types</h2>
         <ul className="mt-5 grid gap-3">
           {services.map((s) => (
@@ -456,7 +463,7 @@ function AdminPage() {
         </ul>
       </section>
 
-      <section className="mt-14">
+      <section id="admin-time-off" className="mt-14 scroll-mt-48">
         <h2 className="text-2xl">Time off</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Block out holidays or busy periods — blocked times disappear from the booking calendar.
@@ -592,7 +599,7 @@ function AdminAccessSection() {
   const rows = invites.data ?? [];
 
   return (
-    <section className="mt-14">
+    <section id="admin-access" className="mt-14 scroll-mt-48">
       <h2 className="text-2xl">Dashboard access</h2>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
         Invite someone to manage the practice dashboard. The link works only once, expires after 48
@@ -732,7 +739,7 @@ function WeekAheadEditor({ isAdmin }: { isAdmin: boolean }) {
   const days = week.data ?? [];
 
   return (
-    <section className="mt-14">
+    <section id="admin-week" className="mt-14 scroll-mt-48">
       <h2 className="text-2xl">The week ahead</h2>
       <p className="mt-2 text-sm text-muted-foreground">
         Open or close individual times for the next seven days ({site.availability.timezoneLabel}).
@@ -879,7 +886,7 @@ function BookingEmailSettings({ isAdmin }: { isAdmin: boolean }) {
   const emailConfigured = settings.data?.emailConfigured ?? false;
 
   return (
-    <section className="mt-12 rounded-3xl border border-border bg-card p-6 sm:p-8">
+    <section id="admin-emails" className="mt-12 scroll-mt-48 rounded-3xl border border-border bg-card p-6 sm:p-8">
       <h2 className="text-2xl">Booking emails &amp; online sessions</h2>
       <p className="mt-2 text-sm text-muted-foreground">
         When a session is booked and confirmed, the client gets a confirmation and you get a
