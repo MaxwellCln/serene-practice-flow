@@ -40,6 +40,7 @@ import {
   revokeAdminInvite,
 } from "@/lib/admin-invite.functions";
 import { listAvailability } from "@/lib/booking.functions";
+import { BlogManager } from "@/components/blog-manager";
 import { Badge } from "@/components/ui/badge";
 import {
   formatMoney,
@@ -391,6 +392,8 @@ function AdminPage() {
       </section>
 
       <WeekAheadEditor isAdmin={isAdmin} />
+
+      <BlogManager />
 
       <section className="mt-14">
         <h2 className="text-2xl">Usual weekly pattern</h2>

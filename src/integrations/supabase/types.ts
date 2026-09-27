@@ -98,6 +98,45 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_posts: {
+        Row: {
+          body: string
+          created_at: string
+          excerpt: string
+          id: string
+          is_published: boolean
+          published_at: string
+          slug: string
+          title: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          excerpt?: string
+          id?: string
+          is_published?: boolean
+          published_at?: string
+          slug: string
+          title: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          excerpt?: string
+          id?: string
+          is_published?: boolean
+          published_at?: string
+          slug?: string
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           amount_cents: number
