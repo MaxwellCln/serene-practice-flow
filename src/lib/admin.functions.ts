@@ -21,6 +21,7 @@ export type AdminBooking = {
   clientName: string;
   clientEmail: string;
   clientPhone: string | null;
+  notes: string | null;
   serviceTitle: string;
 };
 
@@ -69,7 +70,7 @@ export const getAdminData = createServerFn({ method: "GET" })
       supabase
         .from("bookings")
         .select(
-          "id, starts_at, duration_minutes, status, payment_status, amount_cents, currency, client_name, client_email, client_phone, services(title)",
+          "id, starts_at, duration_minutes, status, payment_status, amount_cents, currency, client_name, client_email, client_phone, notes, services(title)",
         )
         .order("starts_at", { ascending: true }),
       supabase
@@ -98,6 +99,7 @@ export const getAdminData = createServerFn({ method: "GET" })
         clientName: b.client_name as string,
         clientEmail: b.client_email as string,
         clientPhone: (b.client_phone as string | null) ?? null,
+        notes: (b.notes as string | null) ?? null,
         serviceTitle: (b as unknown as { services?: { title?: string } }).services?.title ?? "Session",
       })),
       services: (servicesRes.data ?? []).map((s) => ({

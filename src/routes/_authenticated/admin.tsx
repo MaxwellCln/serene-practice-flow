@@ -370,6 +370,11 @@ function AdminPage() {
                   </a>
                   {b.clientPhone ? ` · ${b.clientPhone}` : ""}
                 </p>
+                {b.notes && (
+                  <p className="mt-3 border-l-2 border-border pl-3 text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">Shared for this booking:</span> {b.notes}
+                  </p>
+                )}
                 <div className="mt-4 flex flex-wrap gap-3">
                   <Select
                     value={b.status}
