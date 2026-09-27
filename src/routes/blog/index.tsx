@@ -27,30 +27,24 @@ function BlogIndex() {
         <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
           {site.blog.intro}
         </p>
-        {site.blog.posts.length === 0 ? (
-          <p className="mt-12 rounded-2xl border border-border bg-card p-8 text-muted-foreground">
-            New writing is on the way — check back soon.
-          </p>
-        ) : (
-          <ul className="mt-12 space-y-6">
-            {site.blog.posts.map((post) => (
-              <li key={post.slug}>
-                <Link
-                  to="/blog/$slug"
-                  params={{ slug: post.slug }}
-                  className="block rounded-2xl border border-border bg-card p-7 transition-colors hover:border-accent/60"
-                >
-                  <p className="text-xs tracking-widest text-muted-foreground uppercase">
-                    {post.date}
-                  </p>
-                  <h2 className="mt-2 text-2xl text-balance">{post.title}</h2>
-                  <p className="mt-3 leading-relaxed text-muted-foreground">{post.excerpt}</p>
-                  <span className="mt-4 inline-block text-sm text-primary">Read →</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+        <ul className="mt-12 space-y-6">
+          {site.blog.posts.map((post) => (
+            <li key={post.slug}>
+              <Link
+                to="/blog/$slug"
+                params={{ slug: post.slug }}
+                className="block rounded-2xl border border-border bg-card p-7 transition-colors hover:border-accent/60"
+              >
+                <p className="text-xs tracking-widest text-muted-foreground uppercase">
+                  {post.date}
+                </p>
+                <h2 className="mt-2 text-2xl text-balance">{post.title}</h2>
+                <p className="mt-3 leading-relaxed text-muted-foreground">{post.excerpt}</p>
+                <span className="mt-4 inline-block text-sm text-primary">Read →</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
         <p className="mt-14 max-w-2xl text-sm text-muted-foreground">{site.legal.crisisNote}</p>
       </main>
       <SiteFooter />
