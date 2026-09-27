@@ -48,14 +48,13 @@ export function SiteHeader() {
           ))}
           <Link to="/blog" className="text-muted-foreground transition-colors hover:text-foreground">Blog</Link>
           <Link to="/contact" className="text-muted-foreground transition-colors hover:text-foreground">Contact</Link>
-          <MoreMenu />
+          <MoreMenu variant="desktop" />
         </nav>
 
         <div className="flex items-center gap-1">
           <div className="md:hidden">
-            <MoreMenu />
+            <MoreMenu variant="mobile" />
           </div>
-          <Link to="/blog" className="text-sm text-muted-foreground md:hidden">Blog</Link>
           <Button asChild size="sm" className="rounded-full px-5">
             <Link to="/book">Book</Link>
           </Button>
