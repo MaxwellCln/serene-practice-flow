@@ -48,14 +48,13 @@ export function SiteHeader() {
           ))}
           <Link to="/blog" className="text-muted-foreground transition-colors hover:text-foreground">Blog</Link>
           <Link to="/contact" className="text-muted-foreground transition-colors hover:text-foreground">Contact</Link>
-          <MoreMenu />
+          <MoreMenu variant="desktop" />
         </nav>
 
         <div className="flex items-center gap-1">
           <div className="md:hidden">
-            <MoreMenu />
+            <MoreMenu variant="mobile" />
           </div>
-          <Link to="/blog" className="text-sm text-muted-foreground md:hidden">Blog</Link>
           <Button asChild size="sm" className="rounded-full px-5">
             <Link to="/book">Book</Link>
           </Button>
@@ -66,7 +65,12 @@ export function SiteHeader() {
   );
 }
 
-function MoreMenu() {
+function MoreMenu({ variant }: { variant: "desktop" | "mobile" }) {
+  const items =
+    variant === "mobile"
+      ? [{ to: "/blog", label: "Blog", note: "Recent writing & videos" }, ...moreLinks]
+      : moreLinks;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="group inline-flex items-center gap-1 rounded-full px-2 py-1 text-sm text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
@@ -81,7 +85,7 @@ function MoreMenu() {
         sideOffset={12}
         className="w-64 rounded-2xl border-border bg-card p-2"
       >
-        {moreLinks.map((item) => (
+        {items.map((item) => (
           <DropdownMenuItem key={item.to} asChild className="rounded-xl p-0">
             <Link to={item.to} className="block cursor-pointer px-3 py-2.5">
               <span className="block text-sm">{item.label}</span>
