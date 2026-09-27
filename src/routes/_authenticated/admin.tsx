@@ -998,7 +998,7 @@ function BookingEmailSettings({ isAdmin }: { isAdmin: boolean }) {
           <Input
             id="meeting-note"
             maxLength={300}
-            placeholder="Please join a couple of minutes early; the room opens 10 minutes before."
+            placeholder="Please join the online session a couple of minutes early."
             value={current.meetingNote}
             onChange={(e) => setForm({ ...current, meetingNote: e.target.value })}
           />

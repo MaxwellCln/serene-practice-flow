@@ -7,4 +7,4 @@
 - [x] Restrict first admin claim to mclein568@gmail.com (no open claim route)
 - [x] Admin week-ahead availability editing (open/close individual times, extra dates)
 - [x] Booking confirmation + practice notification emails, online meeting link, admin settings
-- [ ] Online-only copy and services, topic-linked booking, both-party change notices, admin section selector and editable weekly pattern, contact page, and top-level Blog
+- [x] Online-only copy and services, topic-linked booking, both-party change notices, admin section selector and editable weekly pattern, contact page, and top-level Blog
