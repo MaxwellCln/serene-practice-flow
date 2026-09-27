@@ -463,7 +463,7 @@ export const rescheduleMyBooking = createServerFn({ method: "POST" })
       return { ok: false, error: "Please choose a time within the next few weeks." };
     }
 
-    // The new time must be a real slot on the practice's weekly schedule.
+    // The new time must be part of the standing pattern or a one-off opening.
     const dateKey = practiceDateKey(next);
     const weekday = new Date(`${dateKey}T12:00:00Z`).getUTCDay();
     const weekly = await weeklyTimes(context.supabase);

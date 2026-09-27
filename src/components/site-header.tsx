@@ -23,7 +23,6 @@ const moreLinks = [
   { to: "/faqs", label: "FAQs", note: "How sessions work" },
   { to: "/resources", label: "Books & resources", note: "A short reading list" },
   { to: "/workshops", label: "Workshops & speaking", note: "For teams and groups" },
-  { to: "/contact", label: "Contact", note: "Get in touch" },
 ] as const;
 
 export function SiteHeader() {

@@ -89,7 +89,7 @@ export async function notifyBookingConfirmed(
   const isOnline = true;
   const settings = await loadPracticeSettings();
   const meetingLink = isOnline && kind !== "cancellation" ? safeMeetingLink(settings.meetingLink) : "";
-  outcome.meetingLinkMissing = isOnline && !meetingLink;
+  outcome.meetingLinkMissing = isOnline && kind !== "cancellation" && !meetingLink;
 
   const clientResult = await sendBookingEmail(booking.client_email as string, {
     kind,

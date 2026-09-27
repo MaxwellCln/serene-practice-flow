@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, Mail, Monitor, Phone } from "lucide-react";
 
-import roomImage from "@/assets/room.jpg";
 import therapistAsset from "@/assets/therapist.jpg.asset.json";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -73,11 +72,11 @@ function Home() {
           </div>
           <div className="relative">
             <img
-              src={roomImage}
-              alt="A calm therapy room with two armchairs and soft daylight"
-              width={1600}
-              height={1200}
-              className="aspect-[4/3] w-full rounded-3xl object-cover shadow-sm"
+              src={therapistAsset.url}
+              alt="Valerie O'Brien Quinn, psychotherapist"
+              width={1200}
+              height={800}
+              className="aspect-[3/2] w-full rounded-lg object-cover object-[center_25%] shadow-sm"
             />
           </div>
         </section>

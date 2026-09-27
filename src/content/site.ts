@@ -189,13 +189,6 @@ export const site = {
   /** Booking window and notice. Standing weekly times are edited in the admin dashboard. */
   availability: {
     timezoneLabel: "Irish time (IST/GMT)",
-    days: [
-      { weekday: 1, label: "Monday", times: ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"] },
-      { weekday: 2, label: "Tuesday", times: ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"] },
-      { weekday: 3, label: "Wednesday", times: ["12:00", "13:00", "14:00", "15:00", "16:00", "17:00"] },
-      { weekday: 4, label: "Thursday", times: ["09:00", "10:00", "11:00", "14:00", "15:00"] },
-      { weekday: 5, label: "Friday", times: ["09:00", "10:00", "11:00"] },
-    ],
     /** How many days ahead clients can book */
     horizonDays: 28,
     /** Minimum notice, in hours */
