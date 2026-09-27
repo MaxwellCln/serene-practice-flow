@@ -179,6 +179,56 @@ export const site = {
     body: "A short email or phone call is a perfectly good place to start. I reply within two working days.",
   },
 
+  /**
+   * Blog posts. Add a new object to the top of `posts` to publish.
+   * `slug` becomes the web address (/blog/your-slug) — lowercase,
+   * words separated by hyphens. `date` is shown to readers.
+   * Paragraphs are plain text; keep them short and gentle.
+   */
+  blog: {
+    heading: "Writing & reflections",
+    intro:
+      "Occasional short pieces on therapy, grief, anxiety and the business of being human. Nothing here is a substitute for therapy itself.",
+    posts: [
+      {
+        slug: "starting-therapy",
+        title: "Starting therapy: what the first session is really like",
+        date: "September 2026",
+        excerpt:
+          "Most people arrive a little nervous and leave a little lighter. Here's what actually happens when we first sit down together.",
+        paragraphs: [
+          "Almost everyone who comes to therapy for the first time tells me they nearly didn't. The most common worry is simple: not knowing what to say. The good news is that you don't need to prepare anything. The first session is mostly me listening, and you talking about whatever feels most present.",
+          "We'll cover some practical things — confidentiality, how often we might meet, what you'd like to be different — but there's no test and no right way to do it. Some people talk for the whole hour; others sit quietly for a while first. Both are completely fine.",
+          "If you're weighing it up, a free 15-minute call is a gentle place to start. You can ask anything, and there's no obligation to book.",
+        ],
+      },
+      {
+        slug: "grief-has-no-timeline",
+        title: "Grief has no timeline",
+        date: "September 2026",
+        excerpt:
+          "Well-meaning people often ask if you're 'over it yet'. Grief doesn't work that way — and it doesn't need to.",
+        paragraphs: [
+          "One of the most painful things grieving people tell me is the sense that they're taking too long. Friends mean well, but after a few months the invitations to talk about it quietly stop, and the bereaved person can feel they're supposed to be finished.",
+          "Grief isn't a task to complete. It's a relationship continuing in a new form, and it moves at its own pace — sometimes quiet for weeks, then suddenly very present again on an ordinary Tuesday.",
+          "Therapy offers a place where you don't have to be 'doing better' for anyone. We make room for the loss exactly as it is, and find ways to carry it that let the rest of life keep growing around it.",
+        ],
+      },
+      {
+        slug: "anxiety-and-the-body",
+        title: "Anxiety lives in the body, not just the mind",
+        date: "September 2026",
+        excerpt:
+          "Racing heart, tight chest, restless sleep — anxiety is a physical experience. Understanding that changes how we work with it.",
+        paragraphs: [
+          "People often describe anxiety as a thinking problem: too many worries, too much rumination. But anxiety is also deeply physical. The racing heart, the shallow breath, the stomach in knots — these are your nervous system doing its ancient job of trying to protect you.",
+          "That's why simply telling yourself to 'calm down' rarely works, and why our work together involves the body as much as the conversation. Slowing the breath, noticing where tension sits, and gently widening your window of tolerance all help the mind follow.",
+          "If panic attacks or constant worry are part of your life, you're not broken and you're not alone. It's one of the most common reasons people come to see me, and it responds well to support.",
+        ],
+      },
+    ],
+  },
+
   /** Weekly availability, 24h clock. Remove a day to close it. */
   availability: {
     timezoneLabel: "Irish time (IST/GMT)",
