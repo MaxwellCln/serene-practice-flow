@@ -415,6 +415,26 @@ function AdminPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="rounded-full"
+                    disabled={invoiceBusyId === b.id}
+                    onClick={async () => {
+                      setInvoiceBusyId(b.id);
+                      try {
+                        const result = await sendInvoice({ data: { id: b.id } });
+                        if (result.ok) toast.success(`Invoice emailed to ${b.clientEmail}.`);
+                        else toast.error(result.error ?? "Couldn't send the invoice.");
+                      } catch {
+                        toast.error("Couldn't send the invoice.");
+                      } finally {
+                        setInvoiceBusyId(null);
+                      }
+                    }}
+                  >
+                    {invoiceBusyId === b.id ? "Sending…" : "Email invoice"}
+                  </Button>
                 </div>
               </li>
             ))}
