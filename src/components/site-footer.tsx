@@ -11,6 +11,9 @@ export function SiteFooter() {
           {site.credentials} · {site.location} · {site.email}
         </p>
         <nav className="flex flex-wrap gap-5">
+          <Link to="/blog" className="transition-colors hover:text-foreground">
+            Writing
+          </Link>
           <Link to="/faqs" className="transition-colors hover:text-foreground">
             FAQs
           </Link>
