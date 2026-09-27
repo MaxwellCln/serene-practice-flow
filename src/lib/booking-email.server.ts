@@ -97,6 +97,7 @@ export function renderBookingEmail(d: BookingEmailDetails) {
     "",
     ...rows.map(([k, v]) => `${k}: ${v}`),
     link && d.meetingNote ? `\n${d.meetingNote}` : "",
+    callNote ? `\n${callNote}` : "",
     "",
     d.manageUrl ? `Manage your booking: ${d.manageUrl}` : "",
     "",
@@ -129,6 +130,11 @@ export function renderBookingEmail(d: BookingEmailDetails) {
     ${
       link && d.meetingNote
         ? `<p style="font-size:14px;line-height:1.6;color:#6b635a;margin:16px 0 0;">${escapeHtml(d.meetingNote)}</p>`
+        : ""
+    }
+    ${
+      callNote
+        ? `<p style="font-size:14px;line-height:1.6;background-color:#f3efe6;border-radius:12px;padding:14px 16px;margin:20px 0 0;">${escapeHtml(callNote)}</p>`
         : ""
     }
     ${
