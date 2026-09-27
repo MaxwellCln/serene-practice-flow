@@ -23,7 +23,10 @@ export type AdminBooking = {
   clientPhone: string | null;
   notes: string | null;
   serviceTitle: string;
+  precallStatus: PrecallStatus;
 };
+
+export type PrecallStatus = "none" | "needs_contact" | "contacted" | "rejected" | "completed";
 
 export type AdminService = {
   id: string;
@@ -70,7 +73,7 @@ export const getAdminData = createServerFn({ method: "GET" })
       supabase
         .from("bookings")
         .select(
-          "id, starts_at, duration_minutes, status, payment_status, amount_cents, currency, client_name, client_email, client_phone, notes, services(title)",
+          "id, starts_at, duration_minutes, status, payment_status, amount_cents, currency, client_name, client_email, client_phone, notes, precall_status, services(title)",
         )
         .order("starts_at", { ascending: true }),
       supabase
