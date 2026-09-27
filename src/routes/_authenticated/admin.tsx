@@ -254,8 +254,7 @@ function AdminPage() {
           <SelectContent>
             <SelectItem value="schedule">Schedule at a glance</SelectItem>
             <SelectItem value="emails">Booking emails & online sessions</SelectItem>
-            <SelectItem value="bookings">All bookings</SelectItem>
-            <SelectItem value="precall">15-minute intro calls</SelectItem>
+            <SelectItem value="bookings">All bookings & intro calls</SelectItem>
             <SelectItem value="week">The week ahead</SelectItem>
             <SelectItem value="posts">Blog & vlog posts</SelectItem>
             <SelectItem value="pattern">Usual weekly pattern</SelectItem>
@@ -353,62 +352,6 @@ function AdminPage() {
       <BookingEmailSettings isAdmin={isAdmin} />
 
 
-      <section id="admin-precall" className="mt-12 scroll-mt-48">
-        <h2 className="text-2xl">15-minute intro calls</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          For sessions longer than 15 minutes, Valerie offers a free intro call first and texts the
-          client on WhatsApp to arrange a time. Track each call here.
-        </p>
-        {data.isLoading ? (
-          <p className="mt-4 text-sm text-muted-foreground">Loading…</p>
-        ) : bookings.filter((b) => b.durationMinutes > 15 && b.status !== "cancelled").length === 0 ? (
-          <p className="mt-4 text-sm text-muted-foreground">No sessions needing an intro call right now.</p>
-        ) : (
-          <ul className="mt-5 grid gap-3">
-            {bookings
-              .filter((b) => b.durationMinutes > 15 && b.status !== "cancelled")
-              .map((b) => (
-                <li key={b.id} className="rounded-2xl border border-border bg-card p-5">
-                  <div className="flex flex-wrap items-baseline justify-between gap-3">
-                    <span className="font-display text-lg">
-                      {formatPracticeDate(b.startsAt)}, {formatPracticeTime(b.startsAt)}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {b.serviceTitle} · {b.durationMinutes} min
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm">
-                    {b.clientName} ·{" "}
-                    <a className="underline" href={`mailto:${b.clientEmail}`}>
-                      {b.clientEmail}
-                    </a>
-                    {b.clientPhone ? ` · ${b.clientPhone}` : ""}
-                  </p>
-                  <div className="mt-4">
-                    <Select
-                      value={b.precallStatus === "none" ? "needs_contact" : b.precallStatus}
-                      onValueChange={async (value) => {
-                        await patchPrecall({ data: { id: b.id, precallStatus: value as never } });
-                        refresh();
-                      }}
-                    >
-                      <SelectTrigger className="w-64 rounded-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {precallStatuses.map((s) => (
-                          <SelectItem key={s.value} value={s.value}>
-                            {s.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </li>
-              ))}
-          </ul>
-        )}
-      </section>
 
       <section id="admin-bookings" className="mt-12 scroll-mt-48">
         <h2 className="text-2xl">All bookings</h2>
