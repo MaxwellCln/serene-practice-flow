@@ -81,12 +81,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Valerie O'Brien Quinn Psychotherapy" },
       {
         name: "description",
-        content: "Warm, confidential psychotherapy in Limerick City and online. Book a session online.",
+        content: "Warm, confidential online psychotherapy. Book a session online.",
       },
       { property: "og:title", content: "Valerie O'Brien Quinn Psychotherapy" },
       {
         property: "og:description",
-        content: "Warm, confidential psychotherapy in Limerick City and online. Book a session online.",
+        content: "Warm, confidential online psychotherapy. Book a session online.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

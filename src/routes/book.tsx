@@ -19,7 +19,7 @@ import { formatMoney, formatPracticeDate } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/book")({
-  validateSearch: z.object({ service: z.string().optional() }),
+  validateSearch: z.object({ service: z.string().optional(), topic: z.string().max(120).optional() }),
   loader: async () => ({
     services: await listServices(),
     availability: await listAvailability(),
@@ -68,7 +68,7 @@ function BookPage() {
   );
   const [slot, setSlot] = useState<string | null>(null);
   const [activeDate, setActiveDate] = useState<string>(availability[0]?.date ?? "");
-  const [form, setForm] = useState({ name: "", email: "", phone: "", notes: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", notes: site.reasons.items.find((item) => item === search.topic) ?? "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -139,8 +139,11 @@ function BookPage() {
         </Link>
         <h1 className="mt-6 text-4xl">Book a session</h1>
         <p className="mt-3 text-muted-foreground">
-          Three short steps. Times shown in {site.availability.timezoneLabel}.
+          All sessions take place online. Times shown in {site.availability.timezoneLabel}.
         </p>
+        {search.topic && site.reasons.items.some((item) => item === search.topic) && (
+          <p className="mt-4 text-sm text-muted-foreground">You selected: <span className="font-medium text-foreground">{search.topic}</span>. This stays in your private booking details and is never included in email notifications.</p>
+        )}
 
         <ol className="mt-8 flex gap-2 text-xs tracking-wide uppercase">
           {["Session", "Time", "Details"].map((label, i) => (
@@ -249,12 +252,12 @@ function BookPage() {
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Button asChild className="rounded-full">
-                <Link to="/auth" search={{ mode: "signup", redirect: "/book" }}>
+                <Link to="/auth" search={{ mode: "signup", redirect: search.topic ? `/book?topic=${encodeURIComponent(search.topic)}` : "/book" }}>
                   Create an account
                 </Link>
               </Button>
               <Button asChild variant="secondary" className="rounded-full">
-                <Link to="/auth" search={{ mode: "signin", redirect: "/book" }}>
+                <Link to="/auth" search={{ mode: "signin", redirect: search.topic ? `/book?topic=${encodeURIComponent(search.topic)}` : "/book" }}>
                   Sign in
                 </Link>
               </Button>

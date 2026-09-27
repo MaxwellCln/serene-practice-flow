@@ -27,10 +27,12 @@ import {
   getAdminData,
   getPracticeSettings,
   getWeekAvailability,
+  getWeeklyPattern,
+  addWeeklyTime,
+  removeWeeklyTime,
   reopenAvailabilitySlot,
   removeAvailabilityBlock,
   setServiceActive,
-  setServiceOnline,
   updateBookingAdmin,
   updatePracticeSettings,
 } from "@/lib/admin.functions";
@@ -75,13 +77,13 @@ const statuses = ["pending", "confirmed", "completed", "cancelled"] as const;
 const paymentStatuses = ["unpaid", "invoice_pending", "paid", "refunded", "not_required"] as const;
 
 function AdminPage() {
+  const [section, setSection] = useState("schedule");
   const queryClient = useQueryClient();
   const fetchAccount = useServerFn(getMyAccount);
   const fetchData = useServerFn(getAdminData);
   const claimAdmin = useServerFn(claimFirstAdmin);
   const patchBooking = useServerFn(updateBookingAdmin);
   const toggleService = useServerFn(setServiceActive);
-  const toggleOnline = useServerFn(setServiceOnline);
   const addBlock = useServerFn(addAvailabilityBlock);
   const deleteBlock = useServerFn(removeAvailabilityBlock);
   const fetchAvailability = useServerFn(listAvailability);
@@ -231,7 +233,28 @@ function AdminPage() {
         </div>
       </div>
 
-      <section className="mt-12">
+      <div className="sticky top-20 z-30 mt-6 border-b border-border bg-background py-3">
+        <Label htmlFor="admin-section" className="mb-2 block text-sm">Jump to a section</Label>
+        <Select value={section} onValueChange={(value) => {
+          setSection(value);
+          document.getElementById(`admin-${value}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}>
+          <SelectTrigger id="admin-section" className="w-full max-w-sm bg-background"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="schedule">Schedule at a glance</SelectItem>
+            <SelectItem value="emails">Booking emails & online sessions</SelectItem>
+            <SelectItem value="bookings">All bookings</SelectItem>
+            <SelectItem value="week">The week ahead</SelectItem>
+            <SelectItem value="posts">Blog & vlog posts</SelectItem>
+            <SelectItem value="pattern">Usual weekly pattern</SelectItem>
+            <SelectItem value="services">Session types</SelectItem>
+            <SelectItem value="time-off">Time off</SelectItem>
+            <SelectItem value="access">Dashboard access</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <section id="admin-schedule" className="mt-12 scroll-mt-48">
         <h2 className="text-2xl">Schedule at a glance</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Upcoming client sessions and the slots still free, in {site.availability.timezoneLabel}.
@@ -318,7 +341,7 @@ function AdminPage() {
       <BookingEmailSettings isAdmin={isAdmin} />
 
 
-      <section className="mt-12">
+      <section id="admin-bookings" className="mt-12 scroll-mt-48">
         <h2 className="text-2xl">All bookings</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Change a session&apos;s status (including cancelling it) and record payment here.
@@ -347,6 +370,11 @@ function AdminPage() {
                   </a>
                   {b.clientPhone ? ` · ${b.clientPhone}` : ""}
                 </p>
+                {b.notes && (
+                  <p className="mt-3 border-l-2 border-border pl-3 text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">Shared for this booking:</span> {b.notes}
+                  </p>
+                )}
                 <div className="mt-4 flex flex-wrap gap-3">
                   <Select
                     value={b.status}
@@ -393,29 +421,11 @@ function AdminPage() {
 
       <WeekAheadEditor isAdmin={isAdmin} />
 
-      <BlogManager />
+      <div id="admin-posts" className="scroll-mt-48"><BlogManager /></div>
 
-      <section className="mt-14">
-        <h2 className="text-2xl">Usual weekly pattern</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          These are the times offered to clients most weeks ({site.availability.timezoneLabel}).
-          Use the week ahead above to open or close individual times. Clients can book up to{" "}
-          {site.availability.horizonDays} days ahead and must book, move or cancel at least{" "}
-          {site.availability.noticeHours} hours in advance. To change the standing pattern, ask
-          your website contact to update the practice hours.
-        </p>
+      <WeeklyPatternEditor isAdmin={isAdmin} />
 
-        <ul className="mt-5 grid gap-3 sm:grid-cols-2">
-          {site.availability.days.map((day) => (
-            <li key={day.weekday} className="rounded-2xl border border-border bg-card p-5">
-              <p className="font-display text-lg">{day.label}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{day.times.join(" · ")}</p>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="mt-14">
+      <section id="admin-services" className="mt-14 scroll-mt-48">
         <h2 className="text-2xl">Session types</h2>
         <ul className="mt-5 grid gap-3">
           {services.map((s) => (
@@ -440,23 +450,14 @@ function AdminPage() {
                     }}
                   />
                 </label>
-                <label className="flex items-center gap-3 text-sm text-muted-foreground">
-                  Held online
-                  <Switch
-                    checked={s.isOnline}
-                    onCheckedChange={async (checked) => {
-                      await toggleOnline({ data: { id: s.id, isOnline: checked } });
-                      refresh();
-                    }}
-                  />
-                </label>
+                <span className="text-sm text-muted-foreground">Online session</span>
               </div>
             </li>
           ))}
         </ul>
       </section>
 
-      <section className="mt-14">
+      <section id="admin-time-off" className="mt-14 scroll-mt-48">
         <h2 className="text-2xl">Time off</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Block out holidays or busy periods — blocked times disappear from the booking calendar.
@@ -555,6 +556,47 @@ function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
+const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+function WeeklyPatternEditor({ isAdmin }: { isAdmin: boolean }) {
+  const queryClient = useQueryClient();
+  const fetchPattern = useServerFn(getWeeklyPattern);
+  const addTime = useServerFn(addWeeklyTime);
+  const removeTime = useServerFn(removeWeeklyTime);
+  const pattern = useQuery({ queryKey: ["weekly-pattern"], queryFn: () => fetchPattern({}), enabled: isAdmin, retry: false });
+  const [draft, setDraft] = useState({ weekday: 1, time: "09:00" });
+  const [busy, setBusy] = useState(false);
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["weekly-pattern"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-week"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-availability"] });
+  };
+  if (!isAdmin) return null;
+  return <section id="admin-pattern" className="mt-14 scroll-mt-48">
+    <h2 className="text-2xl">Usual weekly pattern</h2>
+    <p className="mt-2 text-sm text-muted-foreground">These online appointment times repeat every week ({site.availability.timezoneLabel}). Removing a time stops new bookings, but does not cancel existing appointments. Use “The week ahead” for one-off changes.</p>
+    <form className="mt-5 flex flex-wrap items-end gap-3" onSubmit={async (event) => {
+      event.preventDefault(); setBusy(true);
+      try {
+        const result = await addTime({ data: draft });
+        if (!result.ok) toast.error(result.error ?? "Couldn't add that time.");
+        else { toast.success("Weekly time added."); refresh(); }
+      } catch { toast.error("Couldn't add that time."); } finally { setBusy(false); }
+    }}>
+      <div className="grid gap-2"><Label htmlFor="pattern-day">Day</Label><Select value={String(draft.weekday)} onValueChange={(value) => setDraft({ ...draft, weekday: Number(value) })}><SelectTrigger id="pattern-day" className="w-40"><SelectValue /></SelectTrigger><SelectContent>{weekdays.map((day, i) => <SelectItem key={day} value={String(i)}>{day}</SelectItem>)}</SelectContent></Select></div>
+      <div className="grid gap-2"><Label htmlFor="pattern-time">Start time</Label><Input id="pattern-time" type="time" required value={draft.time} onChange={(e) => setDraft({ ...draft, time: e.target.value })} /></div>
+      <Button type="submit" disabled={busy}>Add weekly time</Button>
+    </form>
+    {pattern.isLoading ? <p className="mt-5 text-sm text-muted-foreground">Loading weekly times…</p> :
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">{weekdays.map((day, i) => {
+        const times = (pattern.data ?? []).filter((slot) => slot.weekday === i);
+        return <div key={day} className="border-t border-border pt-4"><h3 className="font-display text-lg">{day}</h3>
+          {times.length ? <ul className="mt-3 flex flex-wrap gap-2">{times.map((slot) => <li key={slot.id} className="flex items-center gap-2 rounded border border-border px-3 py-1 text-sm">{slot.time}<Button type="button" size="sm" variant="ghost" aria-label={`Remove ${day} ${slot.time}`} disabled={busy} onClick={async () => { setBusy(true); try { await removeTime({ data: { id: slot.id } }); refresh(); toast.success("Weekly time removed."); } catch { toast.error("Couldn't remove that time."); } finally { setBusy(false); } }}>×</Button></li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">No recurring times.</p>}
+        </div>;
+      })}</div>}
+  </section>;
+}
+
 function AdminAccessSection() {
   const queryClient = useQueryClient();
   const fetchInvites = useServerFn(listAdminInvites);
@@ -592,7 +634,7 @@ function AdminAccessSection() {
   const rows = invites.data ?? [];
 
   return (
-    <section className="mt-14">
+    <section id="admin-access" className="mt-14 scroll-mt-48">
       <h2 className="text-2xl">Dashboard access</h2>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
         Invite someone to manage the practice dashboard. The link works only once, expires after 48
@@ -732,7 +774,7 @@ function WeekAheadEditor({ isAdmin }: { isAdmin: boolean }) {
   const days = week.data ?? [];
 
   return (
-    <section className="mt-14">
+    <section id="admin-week" className="mt-14 scroll-mt-48">
       <h2 className="text-2xl">The week ahead</h2>
       <p className="mt-2 text-sm text-muted-foreground">
         Open or close individual times for the next seven days ({site.availability.timezoneLabel}).
@@ -879,7 +921,7 @@ function BookingEmailSettings({ isAdmin }: { isAdmin: boolean }) {
   const emailConfigured = settings.data?.emailConfigured ?? false;
 
   return (
-    <section className="mt-12 rounded-3xl border border-border bg-card p-6 sm:p-8">
+    <section id="admin-emails" className="mt-12 scroll-mt-48 rounded-3xl border border-border bg-card p-6 sm:p-8">
       <h2 className="text-2xl">Booking emails &amp; online sessions</h2>
       <p className="mt-2 text-sm text-muted-foreground">
         When a session is booked and confirmed, the client gets a confirmation and you get a
@@ -946,8 +988,7 @@ function BookingEmailSettings({ isAdmin }: { isAdmin: boolean }) {
             onChange={(e) => setForm({ ...current, meetingLink: e.target.value })}
           />
           <p className="text-xs text-muted-foreground">
-            Must start with https://. It is added to confirmation emails only for session types
-            marked &ldquo;Held online&rdquo; below. Without a link, those emails simply say the
+            Must start with https://. It is added to confirmation emails for online sessions. Without a link, those emails simply say the
             session is online and the link will follow.
           </p>
         </div>
@@ -957,7 +998,7 @@ function BookingEmailSettings({ isAdmin }: { isAdmin: boolean }) {
           <Input
             id="meeting-note"
             maxLength={300}
-            placeholder="Please join a couple of minutes early; the room opens 10 minutes before."
+            placeholder="Please join the online session a couple of minutes early."
             value={current.meetingNote}
             onChange={(e) => setForm({ ...current, meetingNote: e.target.value })}
           />

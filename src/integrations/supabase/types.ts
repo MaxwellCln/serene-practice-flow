@@ -319,6 +319,30 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_availability: {
+        Row: {
+          created_at: string
+          id: string
+          start_time: string
+          updated_at: string
+          weekday: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          start_time: string
+          updated_at?: string
+          weekday: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          start_time?: string
+          updated_at?: string
+          weekday?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

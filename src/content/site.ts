@@ -10,9 +10,9 @@
 export const site = {
   practiceName: "Valerie O'Brien Quinn Psychotherapy",
   shortName: "Valerie O'Brien Quinn",
-  tagline: "Psychotherapy & counselling in Limerick City and online",
+  tagline: "Online psychotherapy & counselling",
   credentials: "IAHIP Accredited Member",
-  location: "Limerick City and online · based in Clare",
+  location: "Online sessions",
   email: "hello@example-practice.ie",
   phone: "+353 87 292 9087",
   language: "English",
@@ -22,7 +22,7 @@ export const site = {
   hero: {
     eyebrow: "Now accepting new clients",
     heading: "A steady place to think things through.",
-    body: "Warm, confidential therapy for anxiety, trauma, grief, relationship difficulties and life transitions. Sessions in Limerick City or online.",
+    body: "Warm, confidential online therapy for anxiety, trauma, grief, relationship difficulties and life transitions.",
     primaryCta: "Book a session",
     secondaryCta: "How it works",
   },
@@ -30,7 +30,7 @@ export const site = {
   about: {
     heading: "Hello, I'm Valerie.",
     body: [
-      "I'm an IAHIP-accredited psychotherapist based in Clare, offering sessions in Limerick City and online. I work with adults and adolescents around anxiety, trauma, abuse, grief, family-of-origin difficulties, relationship diversity, burnout and life transitions.",
+      "I'm an IAHIP-accredited psychotherapist offering online sessions. I work with adults and adolescents around anxiety, trauma, abuse, grief, family-of-origin difficulties, relationship diversity, burnout and life transitions.",
       "My approach is integrative, humanistic and collaborative. You set the pace; I bring curiosity, structure and a genuine belief that people can move through difficult experiences with support.",
     ],
     points: [
@@ -38,7 +38,7 @@ export const site = {
       "Masters in Adolescent Psychotherapy",
       "MPhil, MA, MSc, MIAHIP",
       "IAHIP Accredited Member",
-      "Sessions in Limerick City and online",
+      "All sessions online",
     ],
   },
 
@@ -89,7 +89,7 @@ export const site = {
     },
     {
       q: "Are online sessions as effective?",
-      a: "Yes. Research shows online therapy works as well as in-person for most concerns, and many clients prefer the flexibility.",
+      a: "Yes. Research shows online therapy can work well for many concerns, and many clients value the flexibility. All sessions here take place online.",
     },
     {
       q: "Is everything confidential?",
@@ -157,7 +157,7 @@ export const site = {
     offerings: [
       {
         title: "Burnout at work",
-        format: "90 minutes · in person or online",
+        format: "90 minutes · online",
         body: "For teams noticing exhaustion and slipping boundaries. What burnout actually is, and what helps.",
       },
       {
@@ -186,16 +186,9 @@ export const site = {
       "Occasional short pieces on therapy, grief, anxiety and the business of being human. Nothing here is a substitute for therapy itself.",
   },
 
-  /** Weekly availability, 24h clock. Remove a day to close it. */
+  /** Booking window and notice. Standing weekly times are edited in the admin dashboard. */
   availability: {
     timezoneLabel: "Irish time (IST/GMT)",
-    days: [
-      { weekday: 1, label: "Monday", times: ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"] },
-      { weekday: 2, label: "Tuesday", times: ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"] },
-      { weekday: 3, label: "Wednesday", times: ["12:00", "13:00", "14:00", "15:00", "16:00", "17:00"] },
-      { weekday: 4, label: "Thursday", times: ["09:00", "10:00", "11:00", "14:00", "15:00"] },
-      { weekday: 5, label: "Friday", times: ["09:00", "10:00", "11:00"] },
-    ],
     /** How many days ahead clients can book */
     horizonDays: 28,
     /** Minimum notice, in hours */
