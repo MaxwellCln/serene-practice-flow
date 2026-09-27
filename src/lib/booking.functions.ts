@@ -207,6 +207,7 @@ export const createBooking = createServerFn({ method: "POST" })
         notes: data.notes || null,
         status: service.requires_payment ? "pending" : "confirmed",
         payment_status: service.requires_payment ? "unpaid" : "not_required",
+        precall_status: service.duration_minutes > 15 ? "needs_contact" : "none",
         amount_cents: service.price_cents,
         currency: service.currency,
       })

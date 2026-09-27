@@ -23,7 +23,10 @@ export type AdminBooking = {
   clientPhone: string | null;
   notes: string | null;
   serviceTitle: string;
+  precallStatus: PrecallStatus;
 };
+
+export type PrecallStatus = "none" | "needs_contact" | "contacted" | "rejected" | "completed";
 
 export type AdminService = {
   id: string;
@@ -70,7 +73,7 @@ export const getAdminData = createServerFn({ method: "GET" })
       supabase
         .from("bookings")
         .select(
-          "id, starts_at, duration_minutes, status, payment_status, amount_cents, currency, client_name, client_email, client_phone, notes, services(title)",
+          "id, starts_at, duration_minutes, status, payment_status, amount_cents, currency, client_name, client_email, client_phone, notes, precall_status, services(title)",
         )
         .order("starts_at", { ascending: true }),
       supabase
@@ -101,6 +104,7 @@ export const getAdminData = createServerFn({ method: "GET" })
         clientPhone: (b.client_phone as string | null) ?? null,
         notes: (b.notes as string | null) ?? null,
         serviceTitle: (b as unknown as { services?: { title?: string } }).services?.title ?? "Session",
+        precallStatus: ((b.precall_status as string) ?? "none") as PrecallStatus,
       })),
       services: (servicesRes.data ?? []).map((s) => ({
         id: s.id as string,
@@ -146,6 +150,30 @@ export const updateBookingAdmin = createServerFn({ method: "POST" })
       const { notifyBookingConfirmed } = await import("@/lib/booking-notify.server");
       await notifyBookingConfirmed(data.id, { kind: "cancellation", notifyAdmin: true });
     }
+    return { ok: true };
+  });
+
+/**
+ * Updates the free 15-minute intro call status for a booking. Only meaningful
+ * for sessions longer than 15 minutes; admin-only.
+ */
+export const setPrecallStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        precallStatus: z.enum(["none", "needs_contact", "contacted", "rejected", "completed"]),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as never);
+    const { error } = await context.supabase
+      .from("bookings")
+      .update({ precall_status: data.precallStatus })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
     return { ok: true };
   });
 
