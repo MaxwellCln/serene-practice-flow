@@ -32,6 +32,7 @@ import {
   removeWeeklyTime,
   reopenAvailabilitySlot,
   removeAvailabilityBlock,
+  sendBookingInvoice,
   setServiceActive,
   updateBookingAdmin,
   updatePracticeSettings,
