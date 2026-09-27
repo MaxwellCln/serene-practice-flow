@@ -252,12 +252,12 @@ function BookPage() {
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Button asChild className="rounded-full">
-                <Link to="/auth" search={{ mode: "signup", redirect: "/book" }}>
+                <Link to="/auth" search={{ mode: "signup", redirect: search.topic ? `/book?topic=${encodeURIComponent(search.topic)}` : "/book" }}>
                   Create an account
                 </Link>
               </Button>
               <Button asChild variant="secondary" className="rounded-full">
-                <Link to="/auth" search={{ mode: "signin", redirect: "/book" }}>
+                <Link to="/auth" search={{ mode: "signin", redirect: search.topic ? `/book?topic=${encodeURIComponent(search.topic)}` : "/book" }}>
                   Sign in
                 </Link>
               </Button>
