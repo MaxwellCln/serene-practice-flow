@@ -983,8 +983,7 @@ function BookingEmailSettings({ isAdmin }: { isAdmin: boolean }) {
             onChange={(e) => setForm({ ...current, meetingLink: e.target.value })}
           />
           <p className="text-xs text-muted-foreground">
-            Must start with https://. It is added to confirmation emails only for session types
-            marked &ldquo;Held online&rdquo; below. Without a link, those emails simply say the
+            Must start with https://. It is added to confirmation emails for online sessions. Without a link, those emails simply say the
             session is online and the link will follow.
           </p>
         </div>

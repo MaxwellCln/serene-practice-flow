@@ -358,7 +358,7 @@ async function notifyBooking(
   const { sendBookingEmail, sendAdminBookingEmail, safeMeetingLink } = await import("@/lib/booking-email.server");
   const { loadPracticeSettings } = await import("@/lib/booking-notify.server");
   const settings = await loadPracticeSettings();
-  const meetingLink = args.isOnline ? safeMeetingLink(settings.meetingLink) : "";
+  const meetingLink = args.isOnline && kind !== "cancellation" ? safeMeetingLink(settings.meetingLink) : "";
   const result = await sendBookingEmail(args.to, {
     kind,
     practiceName: site.practiceName,
@@ -424,7 +424,7 @@ export const cancelMyBooking = createServerFn({ method: "POST" })
       serviceTitle: booking.services?.title ?? "Session",
       startsAt: booking.starts_at,
       durationMinutes: booking.duration_minutes,
-      isOnline: Boolean(booking.services?.is_online),
+      isOnline: true,
       ...(data.origin ? { origin: safeOrigin(data.origin) } : {}),
     });
 
@@ -504,7 +504,7 @@ export const rescheduleMyBooking = createServerFn({ method: "POST" })
       serviceTitle: booking.services?.title ?? "Session",
       startsAt: next.toISOString(),
       durationMinutes: booking.duration_minutes,
-      isOnline: Boolean(booking.services?.is_online),
+      isOnline: true,
       previousStartsAt: booking.starts_at,
       ...(data.origin ? { origin: safeOrigin(data.origin) } : {}),
     });

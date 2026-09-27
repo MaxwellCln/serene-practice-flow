@@ -86,7 +86,7 @@ export async function notifyBookingConfirmed(
 
   const service = (booking as unknown as { services?: { title?: string; is_online?: boolean } })
     .services;
-  const isOnline = Boolean(service?.is_online);
+  const isOnline = true;
   const settings = await loadPracticeSettings();
   const meetingLink = isOnline && kind !== "cancellation" ? safeMeetingLink(settings.meetingLink) : "";
   outcome.meetingLinkMissing = isOnline && !meetingLink;
