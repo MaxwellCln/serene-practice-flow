@@ -149,6 +149,61 @@ export const updateBookingAdmin = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/**
+ * Emails the client an itemised invoice for a booking, suitable for health
+ * insurance claims. Admin-only; honestly reports when email isn't configured.
+ */
+export const sendBookingInvoice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as never);
+    const { data: booking, error } = await context.supabase
+      .from("bookings")
+      .select(
+        "id, starts_at, duration_minutes, client_name, client_email, payment_status, amount_cents, currency, services(title)",
+      )
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!booking) return { ok: false, error: "That booking could not be found." };
+
+    const { sendInvoiceEmail, emailDeliveryConfigured } = await import(
+      "@/lib/booking-email.server"
+    );
+    if (!emailDeliveryConfigured()) {
+      return {
+        ok: false,
+        error:
+          "Email sending isn't set up yet — a verified sending domain is needed before invoices can be emailed.",
+      };
+    }
+
+    const { formatMoney } = await import("@/lib/time");
+    const result = await sendInvoiceEmail(booking.client_email as string, {
+      practiceName: site.practiceName,
+      practitionerName: site.shortName,
+      credentials: site.credentials,
+      clientName: booking.client_name as string,
+      serviceTitle:
+        (booking as unknown as { services?: { title?: string } }).services?.title ?? "Session",
+      startsAt: booking.starts_at as string,
+      durationMinutes: booking.duration_minutes as number,
+      amountLabel: formatMoney(
+        (booking.amount_cents as number) ?? 0,
+        (booking.currency as string) ?? "EUR",
+      ),
+      paymentStatus: String(booking.payment_status),
+      invoiceNumber: `VOQ-${String(booking.id).slice(0, 8).toUpperCase()}`,
+      practiceEmail: site.email,
+      practicePhone: site.phone,
+    });
+    if (!result.sent) {
+      return { ok: false, error: "The invoice could not be sent just now. Please try again." };
+    }
+    return { ok: true };
+  });
+
 export const setServiceActive = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>

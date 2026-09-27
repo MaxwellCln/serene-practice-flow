@@ -111,8 +111,8 @@ export const site = {
         a: "A small number of later slots open up each term. Ask on our intro call and I'll let you know what's free.",
       },
       {
-        q: "Can I claim back the cost?",
-        a: "Some health insurers reimburse part of the fee for accredited psychotherapy. I can provide receipts on request.",
+        q: "Can I claim back the cost through my health insurance?",
+        a: "Often, yes. Many Irish health insurers (such as VHI, Laya and Irish Life Health) reimburse part of the fee for sessions with an IAHIP-accredited psychotherapist, depending on your policy. After your session I can email you an itemised invoice with my accreditation details, which you forward to your insurer to make your claim. Check your own policy for what it covers.",
       },
       {
         q: "What happens in the first session?",
