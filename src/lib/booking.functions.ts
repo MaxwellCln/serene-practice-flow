@@ -331,6 +331,7 @@ type BookingRow = {
   status: string;
   client_name: string;
   client_email: string;
+  client_phone?: string | null;
   service_id: string;
   services?: { title?: string; is_online?: boolean } | null;
 };
@@ -417,6 +418,8 @@ export const cancelMyBooking = createServerFn({ method: "POST" })
 
     const emailSent = await notifyBooking("cancellation", {
       to: booking.client_email,
+      clientEmail: booking.client_email,
+      clientPhone: booking.client_phone,
       clientName: booking.client_name,
       serviceTitle: booking.services?.title ?? "Session",
       startsAt: booking.starts_at,
@@ -463,13 +466,23 @@ export const rescheduleMyBooking = createServerFn({ method: "POST" })
     // The new time must be a real slot on the practice's weekly schedule.
     const dateKey = practiceDateKey(next);
     const weekday = new Date(`${dateKey}T12:00:00Z`).getUTCDay();
-    const rule = site.availability.days.find((d) => d.weekday === weekday);
+    const weekly = await weeklyTimes(context.supabase);
+    const isScheduled = weekly.some(
+      (entry) => entry.weekday === weekday &&
+        practiceTimeToUtc(dateKey, clockTime(entry.start_time)).getTime() === next.getTime(),
+    );
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: extra } = await supabaseAdmin.from("availability_extras")
+      .select("starts_at").eq("starts_at", next.toISOString()).maybeSingle();
+    if (!isScheduled && !extra) return { ok: false, error: "That time isn't available. Please pick another." };
+
+    /* The standing and one-off times share the same conflict and block checks. */
+    /*
     const isScheduled = rule?.times.some(
       (time) => practiceTimeToUtc(dateKey, time).getTime() === next.getTime(),
     );
     if (!isScheduled) return { ok: false, error: "That time isn't available. Please pick another." };
-
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    */
 
     const { data: blocked } = await supabaseAdmin
       .from("availability_blocks")
@@ -492,6 +505,8 @@ export const rescheduleMyBooking = createServerFn({ method: "POST" })
 
     const emailSent = await notifyBooking("reschedule", {
       to: booking.client_email,
+      clientEmail: booking.client_email,
+      clientPhone: booking.client_phone,
       clientName: booking.client_name,
       serviceTitle: booking.services?.title ?? "Session",
       startsAt: next.toISOString(),
