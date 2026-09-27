@@ -132,12 +132,18 @@ export const updateBookingAdmin = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context as never);
+    const { data: existing } = await context.supabase.from("bookings")
+      .select("status").eq("id", data.id).maybeSingle();
     const patch: { status?: string; payment_status?: string } = {};
     if (data.status) patch.status = data.status;
     if (data.paymentStatus) patch.payment_status = data.paymentStatus;
     if (Object.keys(patch).length === 0) return { ok: true };
     const { error } = await context.supabase.from("bookings").update(patch).eq("id", data.id);
     if (error) throw new Error(error.message);
+    if (data.status === "cancelled" && existing?.status !== "cancelled") {
+      const { notifyBookingConfirmed } = await import("@/lib/booking-notify.server");
+      await notifyBookingConfirmed(data.id, { kind: "cancellation", notifyAdmin: true });
+    }
     return { ok: true };
   });
 

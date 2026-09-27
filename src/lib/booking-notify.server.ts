@@ -61,7 +61,7 @@ export type NotifyOutcome = {
  */
 export async function notifyBookingConfirmed(
   bookingId: string,
-  options: { origin?: string; kind?: BookingEmailKind; notifyAdmin?: boolean } = {},
+  options: { origin?: string; kind?: BookingEmailKind; notifyAdmin?: boolean; previousStartsAt?: string } = {},
 ): Promise<NotifyOutcome> {
   const kind = options.kind ?? "confirmation";
   const notifyAdmin = options.notifyAdmin ?? kind === "confirmation";
@@ -88,7 +88,7 @@ export async function notifyBookingConfirmed(
     .services;
   const isOnline = Boolean(service?.is_online);
   const settings = await loadPracticeSettings();
-  const meetingLink = isOnline ? safeMeetingLink(settings.meetingLink) : "";
+  const meetingLink = isOnline && kind !== "cancellation" ? safeMeetingLink(settings.meetingLink) : "";
   outcome.meetingLinkMissing = isOnline && !meetingLink;
 
   const clientResult = await sendBookingEmail(booking.client_email as string, {
@@ -103,6 +103,7 @@ export async function notifyBookingConfirmed(
     practiceEmail: site.email,
     practicePhone: site.phone,
     ...(meetingLink ? { meetingLink } : {}),
+    ...(options.previousStartsAt ? { previousStartsAt: options.previousStartsAt } : {}),
     ...(meetingLink && settings.meetingNote ? { meetingNote: settings.meetingNote } : {}),
   });
   outcome.clientEmailSent = clientResult.sent;
@@ -112,6 +113,8 @@ export async function notifyBookingConfirmed(
       outcome.notificationEmailMissing = true;
     } else {
       const adminResult = await sendAdminBookingEmail(settings.notificationEmail, {
+        kind,
+        ...(options.previousStartsAt ? { previousStartsAt: options.previousStartsAt } : {}),
         practiceName: site.practiceName,
         clientName: booking.client_name as string,
         clientEmail: booking.client_email as string,

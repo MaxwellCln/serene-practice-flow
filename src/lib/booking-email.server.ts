@@ -82,7 +82,7 @@ export function renderBookingEmail(d: BookingEmailDetails) {
   const rows: [string, string][] = [
     ["Session", d.serviceTitle],
     ["When", `${when} (${d.durationMinutes} minutes)`],
-    ["Where", link ? "Online video session" : d.location],
+    ["Where", d.location],
   ];
   if (link) rows.push(["Join link", link]);
 
