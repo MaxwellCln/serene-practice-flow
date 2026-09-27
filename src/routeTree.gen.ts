@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AdminInviteRouteImport } from './routes/admin-invite'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BookRouteImport } from './routes/book'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as FaqsRouteImport } from './routes/faqs'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ResourcesRouteImport } from './routes/resources'
@@ -46,6 +47,11 @@ const AuthRoute = AuthRouteImport.update({
 const BookRoute = BookRouteImport.update({
   id: '/book',
   path: '/book',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FaqsRoute = FaqsRouteImport.update({
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/admin-invite': typeof AdminInviteRoute
   '/auth': typeof AuthRoute
   '/book': typeof BookRoute
+  '/contact': typeof ContactRoute
   '/faqs': typeof FaqsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resources': typeof ResourcesRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/admin-invite': typeof AdminInviteRoute
   '/auth': typeof AuthRoute
   '/book': typeof BookRoute
+  '/contact': typeof ContactRoute
   '/faqs': typeof FaqsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resources': typeof ResourcesRoute
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/admin-invite': typeof AdminInviteRoute
   '/auth': typeof AuthRoute
   '/book': typeof BookRoute
+  '/contact': typeof ContactRoute
   '/faqs': typeof FaqsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resources': typeof ResourcesRoute
@@ -148,6 +157,7 @@ export interface FileRouteTypes {
     | '/admin-invite'
     | '/auth'
     | '/book'
+    | '/contact'
     | '/faqs'
     | '/reset-password'
     | '/resources'
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
     | '/admin-invite'
     | '/auth'
     | '/book'
+    | '/contact'
     | '/faqs'
     | '/reset-password'
     | '/resources'
@@ -179,6 +190,7 @@ export interface FileRouteTypes {
     | '/admin-invite'
     | '/auth'
     | '/book'
+    | '/contact'
     | '/faqs'
     | '/reset-password'
     | '/resources'
@@ -196,6 +208,7 @@ export interface RootRouteChildren {
   AdminInviteRoute: typeof AdminInviteRoute
   AuthRoute: typeof AuthRoute
   BookRoute: typeof BookRoute
+  ContactRoute: typeof ContactRoute
   FaqsRoute: typeof FaqsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ResourcesRoute: typeof ResourcesRoute
@@ -239,6 +252,13 @@ declare module '@tanstack/react-router' {
       path: '/book'
       fullPath: '/book'
       preLoaderRoute: typeof BookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faqs': {
@@ -328,6 +348,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminInviteRoute: AdminInviteRoute,
   AuthRoute: AuthRoute,
   BookRoute: BookRoute,
+  ContactRoute: ContactRoute,
   FaqsRoute: FaqsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ResourcesRoute: ResourcesRoute,
