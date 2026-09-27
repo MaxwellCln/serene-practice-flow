@@ -254,7 +254,7 @@ function AdminPage() {
           <SelectContent>
             <SelectItem value="schedule">Schedule at a glance</SelectItem>
             <SelectItem value="emails">Booking emails & online sessions</SelectItem>
-            <SelectItem value="bookings">All bookings & intro calls</SelectItem>
+            <SelectItem value="bookings">All bookings</SelectItem>
             <SelectItem value="week">The week ahead</SelectItem>
             <SelectItem value="posts">Blog & vlog posts</SelectItem>
             <SelectItem value="pattern">Usual weekly pattern</SelectItem>
@@ -269,6 +269,8 @@ function AdminPage() {
         <h2 className="text-2xl">Schedule at a glance</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Upcoming client sessions and the slots still free, in {site.availability.timezoneLabel}.
+          For longer sessions, track the free 15-minute intro call Valerie arranges with the client
+          over WhatsApp.
         </p>
         {data.isLoading || availability.isLoading ? (
           <p className="mt-4 text-sm text-muted-foreground">Loading…</p>
@@ -313,7 +315,7 @@ function AdminPage() {
                             <a className="underline" href={`mailto:${b.clientEmail}`}>
                               {b.clientEmail}
                             </a>
-                            {b.clientPhone ? (
+                          {b.clientPhone ? (
                               <>
                                 {" · "}
                                 <a className="underline" href={`tel:${b.clientPhone}`}>
@@ -322,6 +324,28 @@ function AdminPage() {
                               </>
                             ) : null}
                           </p>
+                          {b.durationMinutes > 15 && b.status !== "cancelled" && (
+                            <div className="mt-3 grid gap-1">
+                              <span className="text-xs text-muted-foreground">Intro call (WhatsApp)</span>
+                              <Select
+                                value={b.precallStatus === "none" ? "needs_contact" : b.precallStatus}
+                                onValueChange={async (value) => {
+                                  await patchPrecall({ data: { id: b.id, precallStatus: value as never } });
+                                  toast.success("Intro call updated");
+                                  refresh();
+                                }}
+                              >
+                                <SelectTrigger className="w-64 rounded-full" aria-label="15-minute intro call">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {precallStatuses.map((s) => (
+                                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
                         </li>
                       ))}
                   </ul>
@@ -354,11 +378,10 @@ function AdminPage() {
 
 
       <section id="admin-bookings" className="mt-12 scroll-mt-48">
-        <h2 className="text-2xl">All bookings & intro calls</h2>
+        <h2 className="text-2xl">All bookings</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Change a session&apos;s status (including cancelling it), record payment, and track the
-          free 15-minute intro call Valerie offers before longer sessions — she texts the client on
-          WhatsApp to arrange a time.
+          Change a session&apos;s status (including cancelling it) and record payment. The
+          free 15-minute intro call is tracked in the Schedule at a glance section above.
         </p>
         {data.isLoading ? (
           <p className="mt-4 text-sm text-muted-foreground">Loading…</p>
