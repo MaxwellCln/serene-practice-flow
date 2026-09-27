@@ -453,6 +453,7 @@ function AdminPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                  </div>
                   <Button
                     type="button"
                     variant="outline"
