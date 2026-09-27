@@ -78,6 +78,10 @@ export function renderBookingEmail(d: BookingEmailDetails) {
           : "Your session has been moved to a new time.";
 
   const link = d.kind === "cancellation" ? "" : safeMeetingLink(d.meetingLink);
+  const callNote =
+    d.kind === "confirmation" && d.durationMinutes > 15
+      ? "Before your session, Valerie recommends a free 15-minute phone call. She will text you on WhatsApp to arrange a time that suits you."
+      : "";
 
   const rows: [string, string][] = [
     ["Session", d.serviceTitle],
@@ -93,6 +97,7 @@ export function renderBookingEmail(d: BookingEmailDetails) {
     "",
     ...rows.map(([k, v]) => `${k}: ${v}`),
     link && d.meetingNote ? `\n${d.meetingNote}` : "",
+    callNote ? `\n${callNote}` : "",
     "",
     d.manageUrl ? `Manage your booking: ${d.manageUrl}` : "",
     "",
@@ -125,6 +130,11 @@ export function renderBookingEmail(d: BookingEmailDetails) {
     ${
       link && d.meetingNote
         ? `<p style="font-size:14px;line-height:1.6;color:#6b635a;margin:16px 0 0;">${escapeHtml(d.meetingNote)}</p>`
+        : ""
+    }
+    ${
+      callNote
+        ? `<p style="font-size:14px;line-height:1.6;background-color:#f3efe6;border-radius:12px;padding:14px 16px;margin:20px 0 0;">${escapeHtml(callNote)}</p>`
         : ""
     }
     ${
