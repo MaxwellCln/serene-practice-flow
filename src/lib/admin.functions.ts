@@ -210,6 +210,39 @@ export type WeekDay = {
   slots: WeekSlot[];
 };
 
+export type WeeklyPatternSlot = { id: string; weekday: number; time: string };
+
+export const getWeeklyPattern = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<WeeklyPatternSlot[]> => {
+    await assertAdmin(context as never);
+    const { data, error } = await context.supabase.from("weekly_availability")
+      .select("id, weekday, start_time").order("weekday").order("start_time");
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((row) => ({ id: row.id, weekday: row.weekday, time: row.start_time.slice(0, 5) }));
+  });
+
+export const addWeeklyTime = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ weekday: z.number().int().min(0).max(6), time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/) }).parse(data))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as never);
+    const { error } = await context.supabase.from("weekly_availability").insert({ weekday: data.weekday, start_time: data.time });
+    if (error?.code === "23505") return { ok: false, error: "That time is already in the weekly pattern." };
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const removeWeeklyTime = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as never);
+    const { error } = await context.supabase.from("weekly_availability").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 /** Length of the window closed when an admin removes a single slot (minutes). */
 const SLOT_CLOSE_MINUTES = 30;
 const WEEK_DAYS = 7;
@@ -224,7 +257,7 @@ export const getWeekAvailability = createServerFn({ method: "GET" })
     const startIso = new Date(now - 86_400_000).toISOString();
     const endIso = new Date(now + (WEEK_DAYS + 1) * 86_400_000).toISOString();
 
-    const [bookingsRes, blocksRes, extrasRes] = await Promise.all([
+    const [bookingsRes, blocksRes, extrasRes, weeklyRes] = await Promise.all([
       supabase
         .from("bookings")
         .select("starts_at, client_name, status")
@@ -237,10 +270,12 @@ export const getWeekAvailability = createServerFn({ method: "GET" })
         .select("starts_at")
         .gte("starts_at", startIso)
         .lte("starts_at", endIso),
+      supabase.from("weekly_availability").select("weekday, start_time"),
     ]);
     if (bookingsRes.error) throw new Error(bookingsRes.error.message);
     if (blocksRes.error) throw new Error(blocksRes.error.message);
     if (extrasRes.error) throw new Error(extrasRes.error.message);
+    if (weeklyRes.error) throw new Error(weeklyRes.error.message);
 
     const bookedBy = new Map<string, { clientName: string; status: string }>();
     for (const b of bookingsRes.data ?? []) {
@@ -265,13 +300,13 @@ export const getWeekAvailability = createServerFn({ method: "GET" })
     for (let i = 0; i < WEEK_DAYS; i++) {
       const dateKey = practiceDateKey(new Date(now + i * 86_400_000));
       const weekday = new Date(`${dateKey}T12:00:00Z`).getUTCDay();
-      const rule = site.availability.days.find((d) => d.weekday === weekday);
+      const times = (weeklyRes.data ?? []).filter((d) => d.weekday === weekday).map((d) => d.start_time.slice(0, 5));
       const extras = extrasByDay.get(dateKey) ?? [];
 
       const seen = new Set<string>();
       const slots: WeekSlot[] = [];
       const candidates: { iso: string; source: "weekly" | "extra" }[] = [
-        ...(rule?.times ?? []).map((time) => ({
+        ...times.map((time) => ({
           iso: practiceTimeToUtc(dateKey, time).toISOString(),
           source: "weekly" as const,
         })),
