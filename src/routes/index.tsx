@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Check, Mail, MapPin, Phone } from "lucide-react";
+import { Check, Mail, Monitor, Phone } from "lucide-react";
 
 import roomImage from "@/assets/room.jpg";
 import therapistAsset from "@/assets/therapist.jpg.asset.json";
@@ -20,10 +20,10 @@ export const Route = createFileRoute("/")({
   loader: () => listServices(),
   head: () => ({
     meta: [
-      { title: `${site.shortName} | Psychotherapy in Limerick City & online` },
+      { title: `${site.shortName} | Online psychotherapy` },
       {
         name: "description",
-        content: `${site.credentials} offering therapy in Limerick City and online for anxiety, trauma, grief, relationship issues and burnout. Book a session in a few clicks.`,
+        content: `${site.credentials} offering online therapy for anxiety, trauma, grief, relationship issues and burnout. Book a session in a few clicks.`,
       },
       { property: "og:title", content: `${site.practiceName}` },
       { property: "og:description", content: site.hero.body },
@@ -118,11 +118,10 @@ function Home() {
           <p className="mt-3 max-w-xl text-muted-foreground">{site.reasons.intro}</p>
           <ul className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {site.reasons.items.map((item) => (
-              <li
-                key={item}
-                className="rounded-2xl border border-border bg-card px-5 py-4 text-sm leading-relaxed text-card-foreground"
-              >
-                {item}
+              <li key={item}>
+                <Link to="/book" search={{ topic: item }} className="block rounded-lg border border-border bg-card px-5 py-4 text-sm leading-relaxed text-card-foreground transition-colors hover:border-primary focus-visible:outline-2 focus-visible:outline-ring" aria-label={`Book a session about ${item}`}>
+                  {item} <span aria-hidden="true" className="float-right text-primary">↗</span>
+                </Link>
               </li>
             ))}
           </ul>
@@ -200,7 +199,7 @@ function Home() {
                 <Phone className="h-4 w-4" aria-hidden /> {site.phone}
               </a>
               <p className="flex items-center gap-3 opacity-90">
-                <MapPin className="h-4 w-4" aria-hidden /> {site.location}
+                <Monitor className="h-4 w-4" aria-hidden /> {site.location}
               </p>
             </div>
             <Button asChild variant="secondary" size="lg" className="mt-9 rounded-full px-7">

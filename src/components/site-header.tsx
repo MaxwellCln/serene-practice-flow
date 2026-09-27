@@ -19,10 +19,11 @@ const links = [
 ];
 
 const moreLinks = [
-  { to: "/blog", label: "Writing", note: "Short reflections from Valerie" },
+  { to: "/", label: "Home", note: "Back to the practice" },
   { to: "/faqs", label: "FAQs", note: "How sessions work" },
   { to: "/resources", label: "Books & resources", note: "A short reading list" },
   { to: "/workshops", label: "Workshops & speaking", note: "For teams and groups" },
+  { to: "/contact", label: "Contact", note: "Get in touch" },
 ] as const;
 
 export function SiteHeader() {
@@ -46,6 +47,8 @@ export function SiteHeader() {
               {link.label}
             </a>
           ))}
+          <Link to="/blog" className="text-muted-foreground transition-colors hover:text-foreground">Blog</Link>
+          <Link to="/contact" className="text-muted-foreground transition-colors hover:text-foreground">Contact</Link>
           <MoreMenu />
         </nav>
 
@@ -53,6 +56,7 @@ export function SiteHeader() {
           <div className="md:hidden">
             <MoreMenu />
           </div>
+          <Link to="/blog" className="text-sm text-muted-foreground md:hidden">Blog</Link>
           <Button asChild size="sm" className="rounded-full px-5">
             <Link to="/book">Book</Link>
           </Button>
