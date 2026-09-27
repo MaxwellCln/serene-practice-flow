@@ -432,6 +432,9 @@ function AdminPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                  </div>
+                  <div className="grid gap-1">
+                    <span className="text-xs text-muted-foreground">Payment</span>
                   <Select
                     value={b.paymentStatus}
                     onValueChange={async (value) => {
