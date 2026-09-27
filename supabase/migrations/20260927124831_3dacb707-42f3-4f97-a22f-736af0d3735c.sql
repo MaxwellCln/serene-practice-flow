@@ -1,0 +1,1 @@
+ALTER TABLE public.services ADD CONSTRAINT services_online_only CHECK (is_online = true);
