@@ -104,6 +104,7 @@ export const getAdminData = createServerFn({ method: "GET" })
         clientPhone: (b.client_phone as string | null) ?? null,
         notes: (b.notes as string | null) ?? null,
         serviceTitle: (b as unknown as { services?: { title?: string } }).services?.title ?? "Session",
+        precallStatus: ((b.precall_status as string) ?? "none") as PrecallStatus,
       })),
       services: (servicesRes.data ?? []).map((s) => ({
         id: s.id as string,
