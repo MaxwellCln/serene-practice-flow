@@ -19,6 +19,7 @@ const links = [
 ];
 
 const moreLinks = [
+  { to: "/blog", label: "Writing", note: "Short reflections from Valerie" },
   { to: "/faqs", label: "FAQs", note: "How sessions work" },
   { to: "/resources", label: "Books & resources", note: "A short reading list" },
   { to: "/workshops", label: "Workshops & speaking", note: "For teams and groups" },
