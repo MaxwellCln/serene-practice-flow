@@ -380,7 +380,7 @@ async function notifyBooking(
       practiceName: site.practiceName,
       clientName: args.clientName,
       clientEmail: args.clientEmail,
-      clientPhone: args.clientPhone,
+      clientPhone: args.clientPhone ?? null,
       serviceTitle: args.serviceTitle,
       startsAt: args.startsAt,
       durationMinutes: args.durationMinutes,
@@ -419,7 +419,7 @@ export const cancelMyBooking = createServerFn({ method: "POST" })
     const emailSent = await notifyBooking("cancellation", {
       to: booking.client_email,
       clientEmail: booking.client_email,
-      clientPhone: booking.client_phone,
+      clientPhone: booking.client_phone ?? null,
       clientName: booking.client_name,
       serviceTitle: booking.services?.title ?? "Session",
       startsAt: booking.starts_at,
@@ -476,13 +476,6 @@ export const rescheduleMyBooking = createServerFn({ method: "POST" })
       .select("starts_at").eq("starts_at", next.toISOString()).maybeSingle();
     if (!isScheduled && !extra) return { ok: false, error: "That time isn't available. Please pick another." };
 
-    /* The standing and one-off times share the same conflict and block checks. */
-    /*
-    const isScheduled = rule?.times.some(
-      (time) => practiceTimeToUtc(dateKey, time).getTime() === next.getTime(),
-    );
-    if (!isScheduled) return { ok: false, error: "That time isn't available. Please pick another." };
-    */
 
     const { data: blocked } = await supabaseAdmin
       .from("availability_blocks")
@@ -506,7 +499,7 @@ export const rescheduleMyBooking = createServerFn({ method: "POST" })
     const emailSent = await notifyBooking("reschedule", {
       to: booking.client_email,
       clientEmail: booking.client_email,
-      clientPhone: booking.client_phone,
+      clientPhone: booking.client_phone ?? null,
       clientName: booking.client_name,
       serviceTitle: booking.services?.title ?? "Session",
       startsAt: next.toISOString(),
