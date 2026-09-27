@@ -241,6 +241,92 @@ export type BookingEmailResult =
   | { sent: true }
   | { sent: false; reason: "email_not_configured" | "send_failed"; detail?: string };
 
+export type InvoiceEmailDetails = {
+  practiceName: string;
+  practitionerName: string;
+  credentials: string;
+  clientName: string;
+  serviceTitle: string;
+  startsAt: string;
+  durationMinutes: number;
+  amountLabel: string;
+  paymentStatus: string;
+  invoiceNumber: string;
+  practiceEmail: string;
+  practicePhone: string;
+};
+
+/**
+ * An itemised invoice/receipt in the email body (attachments are not
+ * supported), suitable for the client to forward to their health insurer.
+ */
+export function renderInvoiceEmail(d: InvoiceEmailDetails) {
+  const when = formatWhen(d.startsAt);
+  const issued = new Date().toLocaleDateString("en-IE", {
+    timeZone: "Europe/Dublin",
+    dateStyle: "long",
+  });
+  const paid = d.paymentStatus === "paid";
+  const subject = `Invoice ${d.invoiceNumber} — ${d.practiceName}`;
+
+  const rows: [string, string][] = [
+    ["Invoice number", d.invoiceNumber],
+    ["Date issued", issued],
+    ["Client", d.clientName],
+    ["Practitioner", `${d.practitionerName} — ${d.credentials}`],
+    ["Session", d.serviceTitle],
+    ["Session date", `${when} (${d.durationMinutes} minutes)`],
+    ["Fee", d.amountLabel],
+    ["Payment status", paid ? "Paid in full" : d.paymentStatus.replace(/_/g, " ")],
+  ];
+
+  const text = [
+    `Hello ${d.clientName},`,
+    "",
+    "Please find your invoice below. You can forward this email to your health insurer if your policy covers accredited psychotherapy.",
+    "",
+    ...rows.map(([k, v]) => `${k}: ${v}`),
+    "",
+    "If your insurer needs anything else on the invoice, just reply and let us know.",
+    "",
+    `${d.practiceEmail} · ${d.practicePhone}`,
+    d.practiceName,
+  ].join("\n");
+
+  const html = `<!doctype html>
+<html lang="en"><head><meta charset="utf-8" /></head>
+<body style="margin:0;background-color:#ffffff;font-family:Georgia,'Times New Roman',serif;color:#2f2a25;">
+  <div style="max-width:560px;margin:0 auto;padding:32px 28px;">
+    <h1 style="font-size:22px;font-weight:normal;margin:0 0 4px;">Invoice ${escapeHtml(d.invoiceNumber)}</h1>
+    <p style="font-size:14px;color:#6b635a;margin:0 0 20px;">${escapeHtml(d.practiceName)} · Issued ${escapeHtml(issued)}</p>
+    <p style="font-size:15px;line-height:1.6;margin:0 0 20px;">Hello ${escapeHtml(d.clientName)},<br />Please find your invoice below. You can forward this email to your health insurer if your policy covers accredited psychotherapy.</p>
+    <table style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;border-top:1px solid #e5ded2;">
+      ${rows
+        .map(
+          ([k, v]) =>
+            `<tr><td style="padding:10px 0;color:#6b635a;width:150px;border-bottom:1px solid #e5ded2;">${escapeHtml(k)}</td><td style="padding:10px 0;border-bottom:1px solid #e5ded2;">${escapeHtml(v)}</td></tr>`,
+        )
+        .join("")}
+    </table>
+    <p style="font-size:14px;line-height:1.6;color:#6b635a;margin:20px 0 0;">
+      If your insurer needs anything else on the invoice, just reply and let us know.
+    </p>
+    <p style="font-size:14px;line-height:1.6;color:#6b635a;margin:16px 0 0;">
+      ${escapeHtml(d.practiceEmail)} · ${escapeHtml(d.practicePhone)}<br />${escapeHtml(d.practiceName)}
+    </p>
+  </div>
+</body></html>`;
+
+  return { subject, html, text };
+}
+
+export async function sendInvoiceEmail(
+  to: string,
+  details: InvoiceEmailDetails,
+): Promise<BookingEmailResult> {
+  return deliver(to, details.practiceName, "booking-invoice", renderInvoiceEmail(details));
+}
+
 async function deliver(
   to: string,
   practiceName: string,
