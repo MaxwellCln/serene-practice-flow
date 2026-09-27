@@ -28,6 +28,16 @@ export type DayAvailability = {
   slots: { time: string; iso: string }[];
 };
 
+type WeeklyTime = { weekday: number; start_time: string };
+
+async function weeklyTimes(supabase: SupabaseLike): Promise<WeeklyTime[]> {
+  const { data, error } = await supabase.from("weekly_availability").select("weekday, start_time");
+  if (error) throw new Error(error.message);
+  return (data ?? []) as WeeklyTime[];
+}
+
+function clockTime(time: string) { return time.slice(0, 5); }
+
 export const listServices = createServerFn({ method: "GET" }).handler(async (): Promise<Service[]> => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
@@ -79,17 +89,18 @@ export const listAvailability = createServerFn({ method: "GET" }).handler(
       extraByDay.set(key, [...(extraByDay.get(key) ?? []), iso]);
     }
 
+    const weekly = await weeklyTimes(supabaseAdmin);
     const days: DayAvailability[] = [];
     for (let i = 0; i <= site.availability.horizonDays; i++) {
       const day = new Date(now + i * 86_400_000);
       const dateKey = practiceDateKey(day);
       const weekday = new Date(`${dateKey}T12:00:00Z`).getUTCDay();
-      const rule = site.availability.days.find((d) => d.weekday === weekday);
+      const times = weekly.filter((d) => d.weekday === weekday).map((d) => clockTime(d.start_time));
       const extraIsos = extraByDay.get(dateKey) ?? [];
-      if (!rule && extraIsos.length === 0) continue;
+      if (times.length === 0 && extraIsos.length === 0) continue;
 
       const candidates = [
-        ...(rule?.times ?? []).map((time) => ({
+        ...times.map((time) => ({
           time,
           iso: practiceTimeToUtc(dateKey, time).toISOString(),
         })),
@@ -107,7 +118,7 @@ export const listAvailability = createServerFn({ method: "GET" }).handler(
         .sort((a, b) => a.iso.localeCompare(b.iso));
 
       if (slots.length > 0)
-        days.push({ date: dateKey, label: rule?.label ?? formatPracticeDate(`${dateKey}T12:00:00Z`), slots });
+        days.push({ date: dateKey, label: formatPracticeDate(`${dateKey}T12:00:00Z`), slots });
     }
     return days;
   },
@@ -163,6 +174,14 @@ export const createBooking = createServerFn({ method: "POST" })
     }
     if (startsAt.getTime() < Date.now() + site.availability.noticeHours * 3_600_000) {
       return { bookingId: "", requiresPayment: false, error: "That time is too soon — please choose a later slot." };
+    }
+
+    if (startsAt.getTime() > Date.now() + site.availability.horizonDays * 86_400_000) {
+      return { bookingId: "", requiresPayment: false, error: "Please choose a time within the next few weeks." };
+    }
+    const available = await listAvailability();
+    if (!available.some((day) => day.slots.some((slot) => slot.iso === startsAt.toISOString()))) {
+      return { bookingId: "", requiresPayment: false, error: "That time is no longer available. Please choose another." };
     }
 
     const { data: blocked } = await supabaseAdmin
@@ -296,7 +315,7 @@ async function loadOwnBooking(supabase: SupabaseLike, id: string, userId: string
   const { data, error } = await supabase
     .from("bookings")
     .select(
-      "id, starts_at, duration_minutes, status, client_name, client_email, service_id, services(title, is_online)",
+      "id, starts_at, duration_minutes, status, client_name, client_email, client_phone, service_id, services(title, is_online)",
     )
     .eq("id", id)
     .eq("user_id", userId)
@@ -331,9 +350,11 @@ async function notifyBooking(
     isOnline?: boolean;
     origin?: string;
     previousStartsAt?: string;
+    clientEmail: string;
+    clientPhone?: string | null;
   },
 ) {
-  const { sendBookingEmail, safeMeetingLink } = await import("@/lib/booking-email.server");
+  const { sendBookingEmail, sendAdminBookingEmail, safeMeetingLink } = await import("@/lib/booking-email.server");
   const { loadPracticeSettings } = await import("@/lib/booking-notify.server");
   const settings = await loadPracticeSettings();
   const meetingLink = args.isOnline ? safeMeetingLink(settings.meetingLink) : "";
@@ -352,6 +373,24 @@ async function notifyBooking(
     ...(meetingLink && settings.meetingNote ? { meetingNote: settings.meetingNote } : {}),
     ...(args.previousStartsAt ? { previousStartsAt: args.previousStartsAt } : {}),
   });
+  if (settings.notificationEmail) {
+    await sendAdminBookingEmail(settings.notificationEmail, {
+      kind,
+      practiceName: site.practiceName,
+      clientName: args.clientName,
+      clientEmail: args.clientEmail,
+      clientPhone: args.clientPhone,
+      serviceTitle: args.serviceTitle,
+      startsAt: args.startsAt,
+      durationMinutes: args.durationMinutes,
+      location: site.location,
+      paymentStatus: "See dashboard",
+      amountLabel: "",
+      ...(args.previousStartsAt ? { previousStartsAt: args.previousStartsAt } : {}),
+      ...(meetingLink ? { meetingLink } : {}),
+      ...(args.origin ? { adminUrl: `${args.origin}/admin` } : {}),
+    });
+  }
   return result.sent;
 }
 
