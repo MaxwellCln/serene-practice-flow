@@ -154,6 +154,30 @@ export const updateBookingAdmin = createServerFn({ method: "POST" })
   });
 
 /**
+ * Updates the free 15-minute intro call status for a booking. Only meaningful
+ * for sessions longer than 15 minutes; admin-only.
+ */
+export const setPrecallStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        precallStatus: z.enum(["none", "needs_contact", "contacted", "rejected", "completed"]),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as never);
+    const { error } = await context.supabase
+      .from("bookings")
+      .update({ precall_status: data.precallStatus })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/**
  * Emails the client an itemised invoice for a booking, suitable for health
  * insurance claims. Admin-only; honestly reports when email isn't configured.
  */
