@@ -78,6 +78,10 @@ export function renderBookingEmail(d: BookingEmailDetails) {
           : "Your session has been moved to a new time.";
 
   const link = d.kind === "cancellation" ? "" : safeMeetingLink(d.meetingLink);
+  const callNote =
+    d.kind === "confirmation" && d.durationMinutes > 15
+      ? "Before your session, Valerie recommends a free 15-minute phone call. She will text you on WhatsApp to arrange a time that suits you."
+      : "";
 
   const rows: [string, string][] = [
     ["Session", d.serviceTitle],

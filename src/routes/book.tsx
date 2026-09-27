@@ -191,6 +191,15 @@ function BookPage() {
               </button>
             ))}
           </div>
+          {service && service.duration_minutes > 15 && (
+            <div className="mt-5 rounded-2xl border border-primary/30 bg-secondary p-4 text-sm leading-relaxed">
+              <p className="font-medium">A short call first</p>
+              <p className="mt-1 text-muted-foreground">
+                For sessions longer than 15 minutes, Valerie recommends a free 15-minute phone call
+                before your first session. She'll text you on WhatsApp to arrange a time that suits you.
+              </p>
+            </div>
+          )}
         </section>
 
         {/* Step 2 — time */}
