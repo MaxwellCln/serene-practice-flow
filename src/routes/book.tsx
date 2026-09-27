@@ -51,7 +51,7 @@ export const Route = createFileRoute("/book")({
 const detailsSchema = z.object({
   name: z.string().trim().min(2, "Please enter your name").max(100),
   email: z.string().trim().email("Please enter a valid email").max(255),
-  phone: z.string().trim().max(40).optional(),
+  phone: z.string().trim().regex(/^\+?[0-9\s()-]{7,40}$/, "Please enter a valid phone number"),
   notes: z.string().trim().max(1000).optional(),
 });
 
@@ -305,13 +305,17 @@ function BookPage() {
                 {errors["email"] && <p className="text-sm text-destructive">{errors["email"]}</p>}
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="phone">Phone (optional)</Label>
+                <Label htmlFor="phone">Mobile number (WhatsApp)</Label>
                 <Input
                   id="phone"
+                  type="tel"
+                  required
+                  autoComplete="tel"
                   value={form.phone}
                   maxLength={40}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 />
+                {errors["phone"] && <p className="text-sm text-destructive">{errors["phone"]}</p>}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="notes">Anything you&apos;d like me to know? (optional)</Label>
