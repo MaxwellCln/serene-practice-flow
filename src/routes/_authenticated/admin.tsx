@@ -33,6 +33,7 @@ import {
   reopenAvailabilitySlot,
   removeAvailabilityBlock,
   sendBookingInvoice,
+  setPrecallStatus,
   setServiceActive,
   updateBookingAdmin,
   updatePracticeSettings,
@@ -76,6 +77,12 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 const statuses = ["pending", "confirmed", "completed", "cancelled"] as const;
 const paymentStatuses = ["unpaid", "invoice_pending", "paid", "refunded", "not_required"] as const;
+const precallStatuses = [
+  { value: "needs_contact", label: "Needs contacting" },
+  { value: "contacted", label: "Contacted — waiting to schedule" },
+  { value: "rejected", label: "Call rejected" },
+  { value: "completed", label: "Call completed" },
+] as const;
 
 function AdminPage() {
   const [section, setSection] = useState("schedule");
@@ -84,6 +91,7 @@ function AdminPage() {
   const fetchData = useServerFn(getAdminData);
   const claimAdmin = useServerFn(claimFirstAdmin);
   const patchBooking = useServerFn(updateBookingAdmin);
+  const patchPrecall = useServerFn(setPrecallStatus);
   const sendInvoice = useServerFn(sendBookingInvoice);
   const [invoiceBusyId, setInvoiceBusyId] = useState<string | null>(null);
   const toggleService = useServerFn(setServiceActive);
@@ -247,6 +255,7 @@ function AdminPage() {
             <SelectItem value="schedule">Schedule at a glance</SelectItem>
             <SelectItem value="emails">Booking emails & online sessions</SelectItem>
             <SelectItem value="bookings">All bookings</SelectItem>
+            <SelectItem value="precall">15-minute intro calls</SelectItem>
             <SelectItem value="week">The week ahead</SelectItem>
             <SelectItem value="posts">Blog & vlog posts</SelectItem>
             <SelectItem value="pattern">Usual weekly pattern</SelectItem>
