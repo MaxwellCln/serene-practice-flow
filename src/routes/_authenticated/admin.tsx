@@ -444,7 +444,30 @@ function AdminPage() {
                     <span className="font-medium text-foreground">Shared for this booking:</span> {b.notes}
                   </p>
                 )}
-                <div className="mt-4 flex flex-wrap gap-3">
+                <div className="mt-4 flex flex-wrap items-end gap-3">
+                  {b.durationMinutes > 15 && b.status !== "cancelled" && (
+                    <div className="grid gap-1">
+                      <span className="text-xs text-muted-foreground">15-min intro call</span>
+                      <Select
+                        value={b.precallStatus === "none" ? "needs_contact" : b.precallStatus}
+                        onValueChange={async (value) => {
+                          await patchPrecall({ data: { id: b.id, precallStatus: value as never } });
+                          toast.success("Intro call updated");
+                          refresh();
+                        }}
+                      >
+                        <SelectTrigger className="w-64 rounded-full" aria-label="15-minute intro call">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {precallStatuses.map((s) => (
+                            <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  <span className="sr-only">Booking status</span>
                   <Select
                     value={b.status}
                     onValueChange={async (value) => {

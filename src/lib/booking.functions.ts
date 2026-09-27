@@ -130,7 +130,7 @@ const bookingInput = z.object({
   startsAt: z.string().min(1),
   name: z.string().trim().min(2).max(100),
   email: z.string().trim().email().max(255),
-  phone: z.string().trim().max(40).optional().or(z.literal("")),
+  phone: z.string().trim().regex(/^\+?[0-9\s()-]{7,40}$/, "Please enter a valid phone number"),
   notes: z.string().trim().max(1000).optional().or(z.literal("")),
   origin: z.string().trim().max(300).optional(),
 });
