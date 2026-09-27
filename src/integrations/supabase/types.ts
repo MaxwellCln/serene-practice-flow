@@ -150,6 +150,7 @@ export type Database = {
           notes: string | null
           payment_reference: string | null
           payment_status: string
+          precall_status: string
           service_id: string
           starts_at: string
           status: string
@@ -168,6 +169,7 @@ export type Database = {
           notes?: string | null
           payment_reference?: string | null
           payment_status?: string
+          precall_status?: string
           service_id: string
           starts_at: string
           status?: string
@@ -186,6 +188,7 @@ export type Database = {
           notes?: string | null
           payment_reference?: string | null
           payment_status?: string
+          precall_status?: string
           service_id?: string
           starts_at?: string
           status?: string
