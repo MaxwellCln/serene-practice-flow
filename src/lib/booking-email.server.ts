@@ -146,6 +146,8 @@ export function renderBookingEmail(d: BookingEmailDetails) {
 }
 
 export type AdminNotificationDetails = {
+  kind?: BookingEmailKind;
+  previousStartsAt?: string;
   practiceName: string;
   clientName: string;
   clientEmail: string;
@@ -167,21 +169,23 @@ export type AdminNotificationDetails = {
 export function renderAdminNotification(d: AdminNotificationDetails) {
   const when = formatWhen(d.startsAt);
   const link = safeMeetingLink(d.meetingLink);
-  const subject = `New booking — ${when} · ${d.clientName}`;
+  const action = d.kind === "cancellation" ? "Booking cancelled" : d.kind === "reschedule" ? "Booking rescheduled" : "New booking";
+  const subject = `${action} — ${when} · ${d.clientName}`;
 
   const rows: [string, string][] = [
     ["Session", d.serviceTitle],
     ["When", `${when} (${d.durationMinutes} minutes)`],
-    ["Where", link ? "Online video session" : d.location],
+    ["Where", d.location],
     ["Client", d.clientName],
     ["Email", d.clientEmail],
     ["Phone", d.clientPhone || "Not provided"],
-    ["Payment", `${d.amountLabel} · ${d.paymentStatus}`],
+    ...(d.previousStartsAt ? [["Previously", formatWhen(d.previousStartsAt)] as [string, string]] : []),
+    ...(d.amountLabel ? [["Payment", `${d.amountLabel} · ${d.paymentStatus}`] as [string, string]] : []),
   ];
   if (link) rows.push(["Join link", link]);
 
   const text = [
-    "A new session has been booked.",
+    `${action}.`,
     "",
     ...rows.map(([k, v]) => `${k}: ${v}`),
     "",
@@ -196,7 +200,7 @@ export function renderAdminNotification(d: AdminNotificationDetails) {
 <html lang="en"><head><meta charset="utf-8" /></head>
 <body style="margin:0;background-color:#ffffff;font-family:Georgia,'Times New Roman',serif;color:#2f2a25;">
   <div style="max-width:560px;margin:0 auto;padding:32px 28px;">
-    <h1 style="font-size:22px;font-weight:normal;margin:0 0 16px;">New booking</h1>
+     <h1 style="font-size:22px;font-weight:normal;margin:0 0 16px;">${escapeHtml(action)}</h1>
     <table style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;">
       ${rows
         .map(
