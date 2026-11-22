@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { BrandMark } from "@/components/brand-mark";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
@@ -109,6 +110,7 @@ function AuthPage() {
       <SiteHeader />
       <main className="mx-auto max-w-md px-6 py-16">
         <div className="rounded-3xl border border-border bg-card p-8">
+          <BrandMark size="sm" className="mb-6" />
           <h1 className="text-3xl">
             {mode === "signup" ? "Create your account" : mode === "reset" ? "Reset your password" : "Sign in"}
           </h1>

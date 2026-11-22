@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { ChevronDown } from "lucide-react";
 
 import { AccountMenu } from "@/components/account-menu";
+import { BrandMark } from "@/components/brand-mark";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -30,11 +31,12 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
-        <Link to="/" className="font-display text-lg leading-tight tracking-tight">
-          {site.shortName}
-          <span className="block text-[11px] tracking-widest text-muted-foreground uppercase">
-            Psychotherapy
-          </span>
+        <Link
+          to="/"
+          aria-label={`${site.practiceName} — home`}
+          className="rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <BrandMark size="sm" />
         </Link>
 
         <nav className="hidden items-center gap-7 text-sm md:flex">

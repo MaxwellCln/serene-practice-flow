@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { CalendarCheck, CreditCard } from "lucide-react";
 import { z } from "zod";
 
+import { BrandMark } from "@/components/brand-mark";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
@@ -69,6 +70,7 @@ function BookingConfirmation() {
       <SiteHeader />
       <main className="mx-auto max-w-2xl px-6 py-16">
         <div className="rounded-3xl border border-border bg-card p-9">
+          <BrandMark size="sm" className="mb-6" />
           <CalendarCheck className="h-8 w-8 text-primary" aria-hidden />
           <h1 className="mt-5 text-3xl">
             {awaitingPayment && cancelled ? "Your slot is held" : "You're booked in"}

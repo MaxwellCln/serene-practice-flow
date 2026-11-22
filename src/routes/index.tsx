@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, Mail, Monitor, Phone } from "lucide-react";
 
 import therapistAsset from "@/assets/therapist.jpg.asset.json";
+import { BrandMark } from "@/components/brand-mark";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import {
@@ -78,6 +79,19 @@ function Home() {
               height={800}
               className="aspect-[3/2] w-full rounded-lg object-cover object-[center_25%] shadow-sm"
             />
+          </div>
+        </section>
+
+        {/* Practice identity */}
+        <section aria-label={site.practiceName} className="bg-primary text-primary-foreground">
+          <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-6 py-14 text-center md:py-16">
+            <BrandMark size="lg" tone="onPrimary" />
+            <p className="font-display text-xl italic md:text-2xl">
+              &ldquo;{site.nameMeaning.word}&rdquo; &mdash; {site.nameMeaning.translation}
+            </p>
+            <p className="max-w-xl text-sm leading-relaxed opacity-90 md:text-base">
+              {site.nameMeaning.note}
+            </p>
           </div>
         </section>
 

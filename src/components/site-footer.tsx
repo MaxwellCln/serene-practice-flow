@@ -1,12 +1,13 @@
 import { Link } from "@tanstack/react-router";
 
+import { BrandMark } from "@/components/brand-mark";
 import { site } from "@/content/site";
 
 export function SiteFooter() {
   return (
     <footer className="border-t border-border bg-sand">
       <div className="mx-auto max-w-6xl space-y-4 px-6 py-12 text-sm text-muted-foreground">
-        <p className="font-display text-base text-foreground">{site.practiceName}</p>
+        <BrandMark size="md" />
         <p>
           {site.credentials} · {site.location} · {site.email}
         </p>

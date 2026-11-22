@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Mail, Phone, Monitor } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/contact")({
 function ContactPage() {
   return <div className="min-h-screen bg-background"><SiteHeader />
     <main className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
+      <BrandMark size="sm" className="mb-8" />
       <p className="text-sm uppercase text-primary">Get in touch</p>
       <h1 className="mt-4 text-4xl sm:text-5xl">Contact Valerie</h1>
       <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">{site.contact.body}</p>
