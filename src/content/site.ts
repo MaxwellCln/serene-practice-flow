@@ -21,7 +21,7 @@ export const site = {
   currency: "EUR",
   currencySymbol: "€",
 
-  /** The practice name and what it means — shown on the FAQs page. */
+  /** The practice name and what it means — shown on the home page. */
   nameMeaning: {
     word: "Cuan",
     translation: "safe harbour",
@@ -29,7 +29,6 @@ export const site = {
   },
 
   hero: {
-    eyebrow: "Now accepting new clients",
     heading: "A steady place to think things through.",
     body: "Warm, confidential online therapy for anxiety, trauma, grief, relationship difficulties and life transitions.",
     primaryCta: "Book a session",

@@ -49,11 +49,7 @@ function Home() {
         {/* Hero */}
         <section className="mx-auto grid max-w-6xl items-center gap-12 px-6 pt-14 pb-20 md:grid-cols-2 md:pt-24">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs tracking-wide text-secondary-foreground uppercase">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-              {site.hero.eyebrow}
-            </span>
-            <h1 className="mt-6 text-4xl leading-[1.08] text-balance md:text-6xl">
+            <h1 className="text-4xl leading-[1.08] text-balance md:text-6xl">
               {site.hero.heading}
             </h1>
             <p className="mt-6 max-w-md text-lg leading-relaxed text-muted-foreground">
