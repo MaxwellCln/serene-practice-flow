@@ -12,25 +12,28 @@ type BrandTone = "default" | "onPrimary";
 
 const sizes: Record<
   BrandSize,
-  { glyph: string; word: string; sub: string; gap: string }
+  { glyph: string; word: string; sub: string; gap: string; subMargin: string }
 > = {
   sm: {
-    glyph: "h-9 w-9",
-    word: "text-2xl",
-    sub: "text-[10px] tracking-[0.3em]",
-    gap: "gap-2.5",
+    glyph: "h-10 w-10 md:h-12 md:w-12",
+    word: "text-[24px] md:text-[32px]",
+    sub: "text-[9.5px] tracking-[0.28em] md:text-[11.5px] md:tracking-[0.42em]",
+    gap: "gap-2.5 md:gap-3.5",
+    subMargin: "mt-1.5 md:mt-2",
   },
   md: {
-    glyph: "h-11 w-11",
-    word: "text-3xl",
-    sub: "text-[11px] tracking-[0.34em]",
-    gap: "gap-3",
+    glyph: "h-12 w-12 md:h-14 md:w-14",
+    word: "text-3xl md:text-[40px]",
+    sub: "text-[11px] tracking-[0.38em] md:text-[13px] md:tracking-[0.5em]",
+    gap: "gap-3 md:gap-4",
+    subMargin: "mt-2",
   },
   lg: {
-    glyph: "h-14 w-14 md:h-16 md:w-16",
-    word: "text-4xl md:text-5xl",
-    sub: "text-[11px] md:text-sm tracking-[0.4em] md:tracking-[0.45em]",
-    gap: "gap-4",
+    glyph: "h-16 w-16 md:h-20 md:w-20",
+    word: "text-5xl md:text-6xl",
+    sub: "text-sm tracking-[0.45em] md:text-[17px] md:tracking-[0.55em]",
+    gap: "gap-3 md:gap-5",
+    subMargin: "mt-2.5 md:mt-3.5",
   },
 };
 
@@ -84,8 +87,9 @@ export function BrandMark({
         </span>
         <span
           className={cn(
-            "mt-1.5 block font-sans font-medium uppercase",
+            "block font-sans font-medium uppercase",
             s.sub,
+            s.subMargin,
             onPrimary ? "text-primary-foreground/80" : "text-muted-foreground",
           )}
         >
