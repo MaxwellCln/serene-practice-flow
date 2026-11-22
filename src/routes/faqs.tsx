@@ -14,7 +14,7 @@ import { site } from "@/content/site";
 export const Route = createFileRoute("/faqs")({
   head: () => ({
     meta: [
-      { title: `FAQs | ${site.shortName} Psychotherapy` },
+      { title: `FAQs | ${site.practiceName}` },
       { name: "description", content: site.faqPage.intro },
       { property: "og:title", content: `FAQs | ${site.practiceName}` },
       { property: "og:description", content: site.faqPage.intro },
@@ -34,6 +34,13 @@ function FaqsPage() {
       <main className="mx-auto max-w-3xl px-6 pt-14 pb-20 md:pt-20">
         <h1 className="text-4xl text-balance md:text-5xl">{site.faqPage.heading}</h1>
         <p className="mt-5 text-lg leading-relaxed text-muted-foreground">{site.faqPage.intro}</p>
+        <div className="mt-10 rounded-3xl border border-border bg-sand p-7">
+          <p className="text-xs tracking-widest text-primary uppercase">The name</p>
+          <h2 className="mt-2 text-2xl">
+            {site.nameMeaning.word} — {site.nameMeaning.translation}
+          </h2>
+          <p className="mt-3 leading-relaxed text-muted-foreground">{site.nameMeaning.note}</p>
+        </div>
         <Accordion type="single" collapsible className="mt-10">
           {faqs.map((faq) => (
             <AccordionItem key={faq.q} value={faq.q}>
@@ -50,7 +57,7 @@ function FaqsPage() {
               <Link to="/book">Book a session</Link>
             </Button>
             <Button asChild variant="ghost" className="rounded-full px-6">
-              <a href={`mailto:${site.email}`}>Email {site.shortName.split(" ")[0]}</a>
+              <a href={`mailto:${site.email}`}>Email {site.practitionerFirstName}</a>
             </Button>
           </div>
         </div>

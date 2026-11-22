@@ -9,7 +9,7 @@ export const Route = createFileRoute("/blog/")({
   loader: () => listPublishedPosts(),
   head: () => ({
     meta: [
-      { title: `${site.blog.heading} | ${site.shortName}` },
+      { title: `${site.blog.heading} | ${site.practiceName}` },
       { name: "description", content: site.blog.intro },
       { property: "og:title", content: `${site.blog.heading} | ${site.practiceName}` },
       { property: "og:description", content: site.blog.intro },

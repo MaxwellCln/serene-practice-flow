@@ -16,7 +16,7 @@ export const Route = createFileRoute("/blog/$slug")({
   },
   head: ({ loaderData }) => ({
     meta: [
-      { title: `${loaderData?.title ?? "Article"} | ${site.shortName}` },
+      { title: `${loaderData?.title ?? "Article"} | ${site.practiceName}` },
       { name: "description", content: loaderData?.excerpt ?? site.blog.intro },
       { property: "og:title", content: loaderData?.title ?? site.practiceName },
       { property: "og:description", content: loaderData?.excerpt ?? site.blog.intro },
@@ -61,7 +61,7 @@ function BlogPost() {
         <p className="mt-8 text-xs tracking-widest text-muted-foreground uppercase">{formatPostDate(post.publishedAt)}</p>
         <h1 className="mt-3 text-4xl leading-tight text-balance md:text-5xl">{post.title}</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          {site.shortName} · {site.credentials}
+          {site.practiceName} · {site.credentials}
         </p>
         {post.videoUrl && (
           <div className="mt-10">

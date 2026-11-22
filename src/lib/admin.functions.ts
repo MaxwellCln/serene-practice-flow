@@ -210,7 +210,7 @@ export const sendBookingInvoice = createServerFn({ method: "POST" })
     const { formatMoney } = await import("@/lib/time");
     const result = await sendInvoiceEmail(booking.client_email as string, {
       practiceName: site.practiceName,
-      practitionerName: site.shortName,
+      practitionerName: site.practitionerName,
       credentials: site.credentials,
       clientName: booking.client_name as string,
       serviceTitle:
@@ -222,7 +222,7 @@ export const sendBookingInvoice = createServerFn({ method: "POST" })
         (booking.currency as string) ?? "EUR",
       ),
       paymentStatus: String(booking.payment_status),
-      invoiceNumber: `VOQ-${String(booking.id).slice(0, 8).toUpperCase()}`,
+      invoiceNumber: `CUAN-${String(booking.id).slice(0, 8).toUpperCase()}`,
       practiceEmail: site.email,
       practicePhone: site.phone,
     });

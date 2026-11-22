@@ -26,12 +26,12 @@ export const Route = createFileRoute("/book")({
   }),
   head: () => ({
     meta: [
-      { title: `Book a session | ${site.shortName}` },
+      { title: `Book a session | ${site.practiceName}` },
       {
         name: "description",
         content: `Choose a session type, pick a time that suits you and confirm securely. ${site.availability.timezoneLabel}.`,
       },
-      { property: "og:title", content: `Book a session | ${site.shortName}` },
+      { property: "og:title", content: `Book a session | ${site.practiceName}` },
       {
         property: "og:description",
         content: "Pick a session type and a time that suits you, and confirm in a couple of minutes.",

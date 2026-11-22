@@ -19,7 +19,7 @@ export const Route = createFileRoute("/")({
   loader: () => listServices(),
   head: () => ({
     meta: [
-      { title: `${site.shortName} | Online psychotherapy` },
+      { title: `${site.practiceName} | Online psychotherapy` },
       {
         name: "description",
         content: `${site.credentials} offering online therapy for anxiety, trauma, grief, relationship issues and burnout. Book a session in a few clicks.`,
@@ -73,7 +73,7 @@ function Home() {
           <div className="relative">
             <img
               src={therapistAsset.url}
-              alt="Valerie O'Brien Quinn, psychotherapist"
+              alt={`${site.practitionerName}, psychotherapist at ${site.practiceName}`}
               width={1200}
               height={800}
               className="aspect-[3/2] w-full rounded-lg object-cover object-[center_25%] shadow-sm"
@@ -86,7 +86,7 @@ function Home() {
           <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-20 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)]">
             <img
               src={therapistAsset.url}
-              alt={`${site.shortName}, ${site.credentials}, in a therapy session`}
+              alt={`${site.practitionerName}, ${site.credentials}, in an online therapy session`}
               loading="lazy"
               width={1200}
               height={800}

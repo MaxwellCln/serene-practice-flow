@@ -100,7 +100,7 @@ export const createAdminInvite = createServerFn({ method: "POST" })
     const { sendAdminInviteEmail } = await import("./admin-invite-email.server");
     const result = await sendAdminInviteEmail({
       to: email,
-      practiceName: site.shortName,
+      practiceName: site.practiceName,
       link,
       expiresAt,
     });

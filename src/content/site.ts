@@ -8,8 +8,10 @@
  */
 
 export const site = {
-  practiceName: "Valerie O'Brien Quinn Psychotherapy",
-  shortName: "Valerie O'Brien Quinn",
+  practiceName: "Cuan Psychotherapy",
+  shortName: "Cuan",
+  practitionerName: "Valerie O'Brien Quinn",
+  practitionerFirstName: "Valerie",
   tagline: "Online psychotherapy & counselling",
   credentials: "IAHIP Accredited Member",
   location: "Online sessions",
@@ -18,6 +20,13 @@ export const site = {
   language: "English",
   currency: "EUR",
   currencySymbol: "€",
+
+  /** The practice name and what it means — shown on the FAQs page. */
+  nameMeaning: {
+    word: "Cuan",
+    translation: "safe harbour",
+    note: "Cuan is the Irish word for a harbour — a sheltered place to come into. Therapy is meant to be that: somewhere steady to rest while you work through what's happening, and then head back out.",
+  },
 
   hero: {
     eyebrow: "Now accepting new clients",

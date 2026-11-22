@@ -7,7 +7,7 @@ import { site } from "@/content/site";
 export const Route = createFileRoute("/resources")({
   head: () => ({
     meta: [
-      { title: `Books & resources | ${site.shortName}` },
+      { title: `Books & resources | ${site.practiceName}` },
       { name: "description", content: site.resources.intro },
       { property: "og:title", content: `Books & resources | ${site.practiceName}` },
       { property: "og:description", content: site.resources.intro },

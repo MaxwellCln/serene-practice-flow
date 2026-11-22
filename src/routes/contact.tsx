@@ -7,10 +7,10 @@ import { site } from "@/content/site";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({ meta: [
-    { title: `Contact | ${site.shortName}` },
-    { name: "description", content: `Contact ${site.shortName} about online psychotherapy sessions.` },
-    { property: "og:title", content: `Contact | ${site.shortName}` },
-    { property: "og:description", content: `Get in touch with ${site.shortName} about online psychotherapy.` },
+    { title: `Contact | ${site.practiceName}` },
+    { name: "description", content: `Contact ${site.practiceName} about online psychotherapy sessions.` },
+    { property: "og:title", content: `Contact | ${site.practiceName}` },
+    { property: "og:description", content: `Get in touch with ${site.practiceName} about online psychotherapy.` },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
   ] }),
