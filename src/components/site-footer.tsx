@@ -25,6 +25,9 @@ export function SiteFooter() {
           <Link to="/workshops" className="transition-colors hover:text-foreground">
             Workshops &amp; speaking
           </Link>
+          <Link to="/privacy" className="transition-colors hover:text-foreground">
+            Privacy policy
+          </Link>
         </nav>
         <p className="max-w-2xl">{site.legal.crisisNote}</p>
         <p className="pt-2 text-xs">

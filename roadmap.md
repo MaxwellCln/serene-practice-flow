@@ -9,3 +9,6 @@
 - [x] Booking confirmation + practice notification emails, online meeting link, admin settings
 - [x] Online-only copy and services, topic-linked booking, both-party change notices, admin section selector and editable weekly pattern, contact page, and top-level Blog
 - [x] Rebrand to Cuan Psychotherapy across the site, with the name's meaning ("safe harbour") on the FAQs page
+- [ ] Privacy policy page (in progress)
+- [ ] Stripe payments — parked by Max until business email is set up
+- [ ] Business email + sending domain — waiting on domain decision (cuanpsychotherapy.com available)

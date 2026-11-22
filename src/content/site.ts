@@ -208,6 +208,65 @@ export const site = {
     crisisNote:
       "Therapy is not an emergency service. If you are in crisis, contact your GP, emergency services, or the Samaritans on 116 123.",
   },
+
+  /** Privacy policy page — edit the wording here. */
+  privacy: {
+    heading: "Privacy policy",
+    intro:
+      "Cuan Psychotherapy is the online practice of Valerie O'Brien Quinn, an IAHIP-accredited psychotherapist. This page explains what information this website collects, why, and how it is looked after.",
+    sections: [
+      {
+        heading: "What information is collected",
+        body: [
+          "When you book a session, the site asks for your name, email address, mobile number, the session type and time you choose, and anything you choose to share in the booking note. When you create an account, your email address and a securely stored password are kept by the sign-in service — your password is never visible to the practice.",
+          "If you get in touch by email or phone, those details are used to reply to you.",
+        ],
+      },
+      {
+        heading: "How your information is used",
+        body: [
+          "Your details are used to provide your sessions, manage your bookings, send booking confirmations, changes and invoices, and respond to your enquiries. Your information is never sold and never used for advertising.",
+        ],
+      },
+      {
+        heading: "Confidentiality",
+        body: [
+          "Therapy is confidential. Anything you share in the booking note is visible only to Valerie, and no therapy notes or clinical records are kept on this website.",
+        ],
+      },
+      {
+        heading: "Who processes data on our behalf",
+        body: [
+          "This website is built and hosted on Lovable, which provides the hosting, database, sign-in and email delivery for the site. Pages load fonts from Google Fonts, which means your browser contacts Google's servers when a page opens.",
+        ],
+      },
+      {
+        heading: "Visitor analytics",
+        body: [
+          "This site uses Lovable's visitor analytics to understand how the site is used. It uses no cookies, stores nothing on your device, does not keep your IP address and does not identify you. Lovable collects this data for us. Lovable's privacy policy (https://lovable.dev/privacy) explains how it handles it.",
+          "For every visitor it records the pages visited, where visitors came from, their country, browser, operating system and device type, how long they stay, how fast pages load, errors, and which buttons and links are clicked. Detailed data is kept for 90 days and daily summaries for a year.",
+        ],
+      },
+      {
+        heading: "How long information is kept",
+        body: [
+          "Booking and payment records are kept for as long as accounting and legal obligations require. You can delete your account at any time from your account settings — this removes your sign-in and personal details and anonymises any booking records that must be retained.",
+        ],
+      },
+      {
+        heading: "Your rights",
+        body: [
+          "You can ask to see the information held about you, have it corrected, or have it deleted. To do any of these, contact the practice using the details on the contact page.",
+        ],
+      },
+      {
+        heading: "Changes to this policy",
+        body: [
+          "If this policy changes, the updated version will be posted on this page.",
+        ],
+      },
+    ],
+  },
 } as const;
 
 export type SiteContent = typeof site;
