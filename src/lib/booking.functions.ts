@@ -232,6 +232,15 @@ export const createBooking = createServerFn({ method: "POST" })
       if (reqError) throw new Error(reqError.message);
       await supabaseAdmin.from("profiles")
         .update({ full_name: data.name, phone: data.phone || null }).eq("id", context.userId);
+      try {
+        const { notifyIntroRequest } = await import("@/lib/booking-notify.server");
+        await notifyIntroRequest(
+          { clientName: data.name, clientEmail: data.email, clientPhone: data.phone || null },
+          data.origin ? safeOrigin(data.origin) : undefined,
+        );
+      } catch (e) {
+        console.error("[intro-request] notify failed", e);
+      }
       return { bookingId: req.id as string, requiresPayment: false, emailSent: false };
     }
 

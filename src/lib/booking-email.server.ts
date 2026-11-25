@@ -397,6 +397,55 @@ export async function sendAdminBookingEmail(
   return deliver(to, details.practiceName, "booking-admin-notification", renderAdminNotification(details));
 }
 
+export type IntroRequestDetails = {
+  practiceName: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhone?: string | null;
+  adminUrl?: string;
+};
+
+/** Tells the practice a client asked for the free intro call. Never includes client notes. */
+export function renderIntroRequestEmail(d: IntroRequestDetails) {
+  const subject = `New intro call request · ${d.clientName}`;
+  const digits = (d.clientPhone ?? "").replace(/[^0-9]/g, "");
+  const wa = digits ? `https://wa.me/${digits}` : "";
+  const rows: [string, string][] = [
+    ["Client", d.clientName],
+    ["Phone", d.clientPhone || "Not provided"],
+    ["Email", d.clientEmail],
+  ];
+  const text = [
+    "A client has asked for a free 15-minute intro call. Text them on WhatsApp to arrange a time.",
+    "",
+    ...rows.map(([k, v]) => `${k}: ${v}`),
+    wa ? `WhatsApp: ${wa}` : "",
+    d.adminUrl ? `Open the dashboard: ${d.adminUrl}` : "",
+    "",
+    d.practiceName,
+  ].filter(Boolean).join("\n");
+  const btn = (href: string, label: string) =>
+    `<a href="${escapeHtml(href)}" style="display:inline-block;margin:0 8px 8px 0;background-color:#5b6b4f;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:999px;font-size:15px;font-family:Arial,sans-serif;">${label}</a>`;
+  const html = `<!doctype html>
+<html lang="en"><head><meta charset="utf-8" /></head>
+<body style="margin:0;background-color:#ffffff;font-family:Georgia,'Times New Roman',serif;color:#2f2a25;">
+  <div style="max-width:560px;margin:0 auto;padding:32px 28px;">
+    <h1 style="font-size:22px;font-weight:normal;margin:0 0 12px;">New intro call request</h1>
+    <p style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;margin:0 0 16px;">A client has asked for a free 15-minute intro call. Text them on WhatsApp to arrange a time.</p>
+    <table style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;">
+      ${rows.map(([k, v]) => `<tr><td style="padding:8px 0;color:#6b635a;width:110px;">${escapeHtml(k)}</td><td style="padding:8px 0;">${escapeHtml(v)}</td></tr>`).join("")}
+    </table>
+    <p style="margin:24px 0;">${wa ? btn(wa, "Message on WhatsApp") : ""}${d.adminUrl ? btn(d.adminUrl, "Open the dashboard") : ""}</p>
+    <p style="font-size:13px;line-height:1.6;color:#6b635a;margin:0;">Client notes are never included in this email.</p>
+  </div>
+</body></html>`;
+  return { subject, html, text };
+}
+
+export async function sendIntroRequestEmail(to: string, details: IntroRequestDetails): Promise<BookingEmailResult> {
+  return deliver(to, details.practiceName, "intro-call-request", renderIntroRequestEmail(details));
+}
+
 /** Whether a verified sending domain and API key are configured. */
 export function emailDeliveryConfigured() {
   return Boolean(process.env["EMAIL_SENDER_DOMAIN"] && process.env["LOVABLE_API_KEY"]);

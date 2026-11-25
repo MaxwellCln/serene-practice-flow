@@ -137,3 +137,20 @@ export async function notifyBookingConfirmed(
 
   return outcome;
 }
+
+/** Emails the practice that a client asked for the free intro call. */
+export async function notifyIntroRequest(
+  booking: { clientName: string; clientEmail: string; clientPhone: string | null },
+  origin?: string,
+): Promise<{ sent: boolean; notificationEmailMissing: boolean }> {
+  const settings = await loadPracticeSettings();
+  if (!settings.notificationEmail) return { sent: false, notificationEmailMissing: true };
+  const { sendIntroRequestEmail } = await import("@/lib/booking-email.server");
+  const base = origin || requestOrigin();
+  const result = await sendIntroRequestEmail(settings.notificationEmail, {
+    practiceName: site.practiceName,
+    ...booking,
+    ...(base ? { adminUrl: `${base}/admin` } : {}),
+  });
+  return { sent: result.sent, notificationEmailMissing: false };
+}
