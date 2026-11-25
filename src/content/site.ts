@@ -40,6 +40,7 @@ export const site = {
     body: [
       "I'm an IAHIP-accredited psychotherapist offering online sessions. I work with adults and adolescents around anxiety, trauma, abuse, grief, family-of-origin difficulties, relationship diversity, burnout and life transitions.",
       "My approach is integrative, humanistic and collaborative. You set the pace; I bring curiosity, structure and a genuine belief that people can move through difficult experiences with support.",
+      "In plain terms, integrative means I don't follow a one-size-fits-all formula. We shape our sessions around what you need most right now.",
     ],
     points: [
       "Masters in Integrative and Humanistic Psychotherapy",
@@ -127,6 +128,48 @@ export const site = {
         a: "Mostly listening. We talk about what's brought you here, agree how we'll work, and answer any practical questions.",
       },
     ],
+  },
+
+  /** "Online therapy" page in the More menu. */
+  onlineTherapy: {
+    heading: "How online therapy works",
+    intro: "Everything happens online, so here's what to expect and how to get set up. It's simpler than it sounds.",
+    sections: [
+      {
+        heading: "Your free 15-minute call — on WhatsApp",
+        body: [
+          "After you book, Valerie will contact you on WhatsApp, using the mobile number you gave, to arrange a short free call.",
+          "It's a chance to talk briefly about what's bringing you here and make sure we're a good fit before your sessions begin.",
+        ],
+      },
+      {
+        heading: "Your sessions — on Microsoft Teams",
+        body: [
+          "Sessions take place on Microsoft Teams through a secure, private link sent to you before your appointment.",
+          "You don't need a Teams account. You can join from your web browser, or use the free Teams app on your phone or tablet.",
+        ],
+      },
+      {
+        heading: "What you'll need",
+        body: [
+          "A private room where you won't be overheard or interrupted.",
+          "Headphones, so the conversation stays private.",
+          "A steady internet connection, and a computer, tablet or phone with a camera.",
+        ],
+      },
+      {
+        heading: "If the connection drops",
+        body: [
+          "Don't worry — it happens. Rejoin using the same link. If that doesn't work, Valerie will contact you by phone so we can carry on.",
+        ],
+      },
+    ],
+  },
+
+  /** Working with adolescents — shown on the FAQs page. */
+  adolescents: {
+    q: "Do you work with teenagers?",
+    a: "Yes. I hold a Masters in Adolescent Psychotherapy and work with young people aged 13 to 18. For anyone under 18, a parent or guardian gives consent and usually joins a short first conversation. After that, sessions are the young person's own space: what they share stays private, except where there is a risk to their safety, which I explain clearly to both of you at the start.",
   },
 
   resources: {

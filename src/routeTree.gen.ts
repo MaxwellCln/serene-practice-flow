@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BookRouteImport } from './routes/book'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as FaqsRouteImport } from './routes/faqs'
+import { Route as OnlineTherapyRouteImport } from './routes/online-therapy'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ResourcesRouteImport } from './routes/resources'
@@ -58,6 +59,11 @@ const ContactRoute = ContactRouteImport.update({
 const FaqsRoute = FaqsRouteImport.update({
   id: '/faqs',
   path: '/faqs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnlineTherapyRoute = OnlineTherapyRouteImport.update({
+  id: '/online-therapy',
+  path: '/online-therapy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -113,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/book': typeof BookRoute
   '/contact': typeof ContactRoute
   '/faqs': typeof FaqsRoute
+  '/online-therapy': typeof OnlineTherapyRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resources': typeof ResourcesRoute
@@ -130,6 +137,7 @@ export interface FileRoutesByTo {
   '/book': typeof BookRoute
   '/contact': typeof ContactRoute
   '/faqs': typeof FaqsRoute
+  '/online-therapy': typeof OnlineTherapyRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resources': typeof ResourcesRoute
@@ -149,6 +157,7 @@ export interface FileRoutesById {
   '/book': typeof BookRoute
   '/contact': typeof ContactRoute
   '/faqs': typeof FaqsRoute
+  '/online-therapy': typeof OnlineTherapyRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resources': typeof ResourcesRoute
@@ -168,6 +177,7 @@ export interface FileRouteTypes {
     | '/book'
     | '/contact'
     | '/faqs'
+    | '/online-therapy'
     | '/privacy'
     | '/reset-password'
     | '/resources'
@@ -185,6 +195,7 @@ export interface FileRouteTypes {
     | '/book'
     | '/contact'
     | '/faqs'
+    | '/online-therapy'
     | '/privacy'
     | '/reset-password'
     | '/resources'
@@ -203,6 +214,7 @@ export interface FileRouteTypes {
     | '/book'
     | '/contact'
     | '/faqs'
+    | '/online-therapy'
     | '/privacy'
     | '/reset-password'
     | '/resources'
@@ -222,6 +234,7 @@ export interface RootRouteChildren {
   BookRoute: typeof BookRoute
   ContactRoute: typeof ContactRoute
   FaqsRoute: typeof FaqsRoute
+  OnlineTherapyRoute: typeof OnlineTherapyRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ResourcesRoute: typeof ResourcesRoute
@@ -279,6 +292,13 @@ declare module '@tanstack/react-router' {
       path: '/faqs'
       fullPath: '/faqs'
       preLoaderRoute: typeof FaqsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/online-therapy': {
+      id: '/online-therapy'
+      path: '/online-therapy'
+      fullPath: '/online-therapy'
+      preLoaderRoute: typeof OnlineTherapyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -370,6 +390,7 @@ const rootRouteChildren: RootRouteChildren = {
   BookRoute: BookRoute,
   ContactRoute: ContactRoute,
   FaqsRoute: FaqsRoute,
+  OnlineTherapyRoute: OnlineTherapyRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ResourcesRoute: ResourcesRoute,

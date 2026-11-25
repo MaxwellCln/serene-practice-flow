@@ -26,7 +26,7 @@ export const Route = createFileRoute("/faqs")({
 });
 
 function FaqsPage() {
-  const faqs = [...site.faqs, ...site.faqPage.extra];
+  const faqs = [...site.faqs, ...site.faqPage.extra, site.adolescents];
 
   return (
     <div className="min-h-screen bg-background">
