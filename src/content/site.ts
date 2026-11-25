@@ -17,7 +17,7 @@ export const site = {
   /** Full post-nominal letters — shown quietly on the Contact page only. */
   postNominals: "MPhil, MA, MSc, MIAHIP",
   location: "Online sessions",
-  email: "hello@example-practice.ie",
+  email: "enquiries@cuanpsychotherapy.ie",
   phone: "+353 87 292 9087",
   language: "English",
   currency: "EUR",
