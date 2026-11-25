@@ -24,6 +24,9 @@ function ContactPage() {
       <BrandMark size="sm" className="mb-8" />
       <p className="text-sm uppercase text-primary">Get in touch</p>
       <h1 className="mt-4 text-4xl sm:text-5xl">Contact Valerie</h1>
+      <p className="mt-3 text-sm tracking-wide text-muted-foreground">
+        {site.practitionerName}, {site.postNominals}
+      </p>
       <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">{site.contact.body}</p>
       <div className="mt-12 grid gap-6 border-y border-border py-8 text-sm sm:grid-cols-2">
         <a className="flex items-center gap-3 break-all hover:underline" href={`mailto:${site.email}`}><Mail className="h-5 w-5 shrink-0 text-primary" aria-hidden />{site.email}</a>

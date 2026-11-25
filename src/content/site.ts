@@ -13,7 +13,9 @@ export const site = {
   practitionerName: "Valerie O'Brien Quinn",
   practitionerFirstName: "Valerie",
   tagline: "Online psychotherapy & counselling",
-  credentials: "IAHIP Accredited Member",
+  credentials: "IAHIP Accredited Psychotherapist",
+  /** Full post-nominal letters — shown quietly on the Contact page only. */
+  postNominals: "MPhil, MA, MSc, MIAHIP",
   location: "Online sessions",
   email: "hello@example-practice.ie",
   phone: "+353 87 292 9087",
@@ -44,10 +46,8 @@ export const site = {
       "In plain terms, integrative means I don't follow a one-size-fits-all formula. We shape our sessions around what you need most right now.",
     ],
     points: [
-      "Masters in Integrative and Humanistic Psychotherapy",
-      "Masters in Adolescent Psychotherapy",
-      "MPhil, MA, MSc, MIAHIP",
-      "IAHIP Accredited Member",
+      "IAHIP Accredited Psychotherapist",
+      "Masters in Adolescent & Humanistic Psychotherapy",
       "All sessions online",
     ],
   },
