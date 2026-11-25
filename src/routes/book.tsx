@@ -164,6 +164,7 @@ function BookPage() {
         {/* Step 1 — service */}
         <section className="mt-10">
           <h2 className="text-2xl">Choose a session</h2>
+          <p className="mt-3 text-sm text-muted-foreground">{site.servicesSection.paths}</p>
           <div className="mt-5 grid gap-3">
             {services.map((option) => (
               <button
@@ -181,9 +182,18 @@ function BookPage() {
                 )}
               >
                 <div className="flex items-baseline justify-between gap-4">
-                  <span className="font-display text-lg">{option.title}</span>
+                  <span className="font-display text-lg">
+                    {option.title}
+                    {!option.requires_payment && (
+                      <span className="ml-2 rounded-full bg-primary px-2.5 py-0.5 align-middle text-[10px] tracking-wide text-primary-foreground uppercase">
+                        Start here
+                      </span>
+                    )}
+                  </span>
                   <span className="text-sm text-primary">
-                    {formatMoney(option.price_cents, option.currency)}
+                    {option.price_cents === 0
+                      ? "Free"
+                      : formatMoney(option.price_cents, option.currency)}
                   </span>
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">{option.description}</p>
@@ -196,7 +206,8 @@ function BookPage() {
               <p className="font-medium">A short call first</p>
               <p className="mt-1 text-muted-foreground">
                 For sessions longer than 15 minutes, Valerie recommends a free 15-minute phone call
-                before your first session. She'll text you on WhatsApp to arrange a time that suits you.
+                before your first session. She'll text you on WhatsApp to arrange a time that suits
+                you — or you can book that call here by choosing &ldquo;Free intro call&rdquo; above.
               </p>
             </div>
           )}
@@ -280,7 +291,7 @@ function BookPage() {
             <p className="mt-2 text-sm text-muted-foreground">
               {service.title} · {formatPracticeDate(slot)} ·{" "}
               {day?.slots.find((s) => s.iso === slot)?.time} ·{" "}
-              {formatMoney(service.price_cents, service.currency)}
+              {service.price_cents === 0 ? "Free" : formatMoney(service.price_cents, service.currency)}
             </p>
             <form onSubmit={handleSubmit} className="mt-6 grid gap-5">
               <div className="grid gap-2">

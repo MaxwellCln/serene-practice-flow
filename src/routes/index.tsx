@@ -41,6 +41,8 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const services = Route.useLoaderData();
+  const freeCall = services.find((service) => !service.requires_payment) ?? null;
+  const bookFreeCall: { service?: string } = freeCall ? { service: freeCall.slug } : {};
 
   return (
     <div className="min-h-screen bg-background">
@@ -57,12 +59,15 @@ function Home() {
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Button asChild size="lg" className="rounded-full px-7">
-                <Link to="/book">{site.hero.primaryCta}</Link>
+                <Link to="/book" search={bookFreeCall}>{site.hero.primaryCta}</Link>
               </Button>
               <Button asChild variant="ghost" size="lg" className="rounded-full px-6">
-                <a href="#approach">{site.hero.secondaryCta}</a>
+                <Link to="/book">{site.hero.secondaryCta}</Link>
               </Button>
             </div>
+            <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
+              {site.hero.note}
+            </p>
             <p className="mt-6 text-sm text-muted-foreground">
               {site.credentials} · {site.location}
             </p>
@@ -140,23 +145,37 @@ function Home() {
         <section id="services" className="mx-auto max-w-6xl px-6 py-20">
           <h2 className="text-3xl md:text-4xl">{site.servicesSection.heading}</h2>
           <p className="mt-3 max-w-lg text-muted-foreground">{site.servicesSection.note}</p>
-          <div className="mt-10 grid gap-5 md:grid-cols-3">
+          <p className="mt-2 max-w-lg text-sm text-muted-foreground">
+            {site.servicesSection.paths}
+          </p>
+          <div className="mt-12 grid gap-5 md:grid-cols-3">
             {services.map((service) => (
               <article
                 key={service.id}
-                className="flex flex-col rounded-2xl border border-border bg-card p-7"
+                className="relative flex flex-col rounded-2xl border border-border bg-card p-7"
               >
+                {!service.requires_payment && (
+                  <span className="absolute -top-3 left-7 rounded-full bg-primary px-3 py-1 text-xs text-primary-foreground">
+                    Start here
+                  </span>
+                )}
                 <h3 className="text-xl">{service.title}</h3>
                 <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
                   {service.description}
                 </p>
                 <p className="mt-6 font-display text-2xl text-primary">
-                  {formatMoney(service.price_cents, service.currency)}
+                  {service.price_cents === 0
+                    ? "Free"
+                    : formatMoney(service.price_cents, service.currency)}
                 </p>
                 <p className="text-xs text-muted-foreground">{service.duration_minutes} minutes</p>
-                <Button asChild variant="secondary" className="mt-6 rounded-full">
+                <Button
+                  asChild
+                  variant={service.requires_payment ? "secondary" : "default"}
+                  className="mt-6 rounded-full"
+                >
                   <Link to="/book" search={{ service: service.slug }}>
-                    Book this
+                    {service.requires_payment ? "Book this" : "Book the free call"}
                   </Link>
                 </Button>
               </article>
@@ -178,6 +197,16 @@ function Home() {
                 </li>
               ))}
             </ol>
+            <p className="mt-10">
+              <Link
+                to="/book"
+                search={bookFreeCall}
+                className="inline-flex items-center gap-2 rounded-full border border-primary px-5 py-2.5 text-sm text-primary transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-ring"
+              >
+                {site.approach.cta}
+                <span aria-hidden="true">↗</span>
+              </Link>
+            </p>
           </div>
         </section>
 
@@ -212,7 +241,7 @@ function Home() {
               </p>
             </div>
             <Button asChild variant="secondary" size="lg" className="mt-9 rounded-full px-7">
-              <Link to="/book">Book a session</Link>
+              <Link to="/book" search={bookFreeCall}>{site.hero.primaryCta}</Link>
             </Button>
           </div>
         </section>

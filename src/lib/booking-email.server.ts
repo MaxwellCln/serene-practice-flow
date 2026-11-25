@@ -83,6 +83,11 @@ export function renderBookingEmail(d: BookingEmailDetails) {
       ? "Before your session, Valerie recommends a free 15-minute phone call. She will text you on WhatsApp to arrange a time that suits you."
       : "";
 
+  const freeCallNote =
+    d.kind === "confirmation" && d.durationMinutes <= 15
+      ? "This call is free and there's nothing to prepare. If it feels like a good fit, we can arrange your first session then."
+      : "";
+
   const rows: [string, string][] = [
     ["Session", d.serviceTitle],
     ["When", `${when} (${d.durationMinutes} minutes)`],
@@ -98,6 +103,7 @@ export function renderBookingEmail(d: BookingEmailDetails) {
     ...rows.map(([k, v]) => `${k}: ${v}`),
     link && d.meetingNote ? `\n${d.meetingNote}` : "",
     callNote ? `\n${callNote}` : "",
+    freeCallNote ? `\n${freeCallNote}` : "",
     "",
     d.manageUrl ? `Manage your booking: ${d.manageUrl}` : "",
     "",
@@ -135,6 +141,11 @@ export function renderBookingEmail(d: BookingEmailDetails) {
     ${
       callNote
         ? `<p style="font-size:14px;line-height:1.6;background-color:#f3efe6;border-radius:12px;padding:14px 16px;margin:20px 0 0;">${escapeHtml(callNote)}</p>`
+        : ""
+    }
+    ${
+      freeCallNote
+        ? `<p style="font-size:14px;line-height:1.6;background-color:#f3efe6;border-radius:12px;padding:14px 16px;margin:20px 0 0;">${escapeHtml(freeCallNote)}</p>`
         : ""
     }
     ${
