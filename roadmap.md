@@ -12,3 +12,5 @@
 - [ ] Privacy policy page (in progress)
 - [ ] Stripe payments — parked by Max until business email is set up
 - [ ] Business email + sending domain — waiting on domain decision (cuanpsychotherapy.com available)
+
+- [ ] When Stripe is set up: add Stripe webhook so paid bookings are marked Paid even if client closes the tab (blocked: Stripe not set up yet)
