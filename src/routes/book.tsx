@@ -13,7 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { site } from "@/content/site";
 import { useSession } from "@/hooks/use-session";
-import { createBooking, listAvailability, listServices } from "@/lib/booking.functions";
+import { createBooking, getMyBookingEligibility, listAvailability, listServices } from "@/lib/booking.functions";
+import { useQuery } from "@tanstack/react-query";
 import { startCheckout } from "@/lib/payments.functions";
 import { formatMoney, formatPracticeDate } from "@/lib/time";
 import { cn } from "@/lib/utils";
@@ -62,6 +63,14 @@ function BookPage() {
   const { session, loading: sessionLoading } = useSession();
   const submitBooking = useServerFn(createBooking);
   const openCheckout = useServerFn(startCheckout);
+  const fetchEligibility = useServerFn(getMyBookingEligibility);
+  const { data: eligibility } = useQuery({
+    queryKey: ["booking-eligibility", session?.user.id],
+    queryFn: () => fetchEligibility(),
+    enabled: !!session,
+    retry: false,
+  });
+  const paidUnlocked = eligibility?.paidUnlocked ?? false;
 
   const [serviceId, setServiceId] = useState<string | null>(
     () => services.find((s) => s.slug === search.service)?.id ?? null,
@@ -72,7 +81,10 @@ function BookPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  const service = useMemo(() => services.find((s) => s.id === serviceId) ?? null, [services, serviceId]);
+  const service = useMemo(() => {
+    const found = services.find((s) => s.id === serviceId) ?? null;
+    return found && found.requires_payment && !paidUnlocked ? null : found;
+  }, [services, serviceId, paidUnlocked]);
   const day = availability.find((d) => d.date === activeDate) ?? availability[0];
   const step = !service ? 1 : !slot ? 2 : 3;
 
@@ -166,10 +178,14 @@ function BookPage() {
           <h2 className="text-2xl">Choose a session</h2>
           <p className="mt-3 text-sm text-muted-foreground">{site.servicesSection.paths}</p>
           <div className="mt-5 grid gap-3">
-            {services.map((option) => (
+            {services.map((option) => {
+              const locked = option.requires_payment && !paidUnlocked;
+              return (
               <button
                 key={option.id}
                 type="button"
+                disabled={locked}
+                aria-disabled={locked}
                 onClick={() => {
                   setServiceId(option.id);
                   setSlot(null);
@@ -179,6 +195,7 @@ function BookPage() {
                   option.id === serviceId
                     ? "border-primary ring-1 ring-primary"
                     : "border-border hover:border-primary/50",
+                  locked && "cursor-not-allowed opacity-55 hover:border-border",
                 )}
               >
                 <div className="flex items-baseline justify-between gap-4">
@@ -197,17 +214,26 @@ function BookPage() {
                   </span>
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">{option.description}</p>
-                <p className="mt-2 text-xs text-muted-foreground">{option.duration_minutes} minutes</p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {option.duration_minutes} minutes
+                  {locked && " · Available after your free intro call"}
+                </p>
               </button>
-            ))}
+              );
+            })}
           </div>
+          {!paidUnlocked && (
+            <p className="mt-4 text-sm text-muted-foreground">
+              Full sessions open up once your free 15-minute intro call has taken place. Valerie will
+              text you on WhatsApp to arrange the call.
+            </p>
+          )}
           {service && service.duration_minutes > 15 && (
             <div className="mt-5 rounded-2xl border border-primary/30 bg-secondary p-4 text-sm leading-relaxed">
               <p className="font-medium">A short call first</p>
               <p className="mt-1 text-muted-foreground">
-                For sessions longer than 15 minutes, Valerie recommends a free 15-minute phone call
-                before your first session. She'll text you on WhatsApp to arrange a time that suits
-                you — or you can book that call here by choosing &ldquo;Free intro call&rdquo; above.
+                Valerie may also text you on WhatsApp before your session if there&apos;s anything
+                to arrange.
               </p>
             </div>
           )}

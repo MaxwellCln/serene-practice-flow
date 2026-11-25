@@ -32,8 +32,8 @@ export const site = {
     heading: "A steady place to think things through.",
     body: "Warm, confidential online therapy for anxiety, trauma, grief, relationship difficulties and life transitions.",
     primaryCta: "Book a free 15-min intro call",
-    secondaryCta: "Or book a full session",
-    note: "Most people start with the free call — no payment, no commitment. You're also welcome to go straight to a full session.",
+    secondaryCta: "Already had your call? Book a session",
+    note: "Everyone starts with the free call — no payment, no commitment. Full sessions open up once you've had it.",
   },
 
   about: {
@@ -91,7 +91,7 @@ export const site = {
   servicesSection: {
     heading: "Sessions & fees",
     note: "Payment is taken securely at the time of booking. Free cancellation up to 24 hours before.",
-    paths: "Most people begin with the free intro call. You can also book a full session straight away.",
+    paths: "Everyone begins with the free intro call. Full sessions can be booked once that call has taken place.",
   },
 
   faqs: [

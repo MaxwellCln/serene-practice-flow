@@ -153,6 +153,27 @@ export type CreateBookingResult = {
   emailSent?: boolean;
 };
 
+/** Paid sessions unlock once the client has had a free intro call (its start time has passed)
+ * or has already had a paid session before. */
+async function hasHadIntroCall(admin: any, userId: string): Promise<boolean> {
+  const { data, error } = await admin
+    .from("bookings")
+    .select("id")
+    .eq("user_id", userId)
+    .neq("status", "cancelled")
+    .lte("starts_at", new Date().toISOString())
+    .limit(20);
+  if (error) throw new Error(error.message);
+  return (data ?? []).length > 0;
+}
+
+export const getMyBookingEligibility = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ paidUnlocked: boolean }> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    return { paidUnlocked: await hasHadIntroCall(supabaseAdmin, context.userId) };
+  });
+
 export const createBooking = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => bookingInput.parse(data))
@@ -167,6 +188,13 @@ export const createBooking = createServerFn({ method: "POST" })
     if (serviceError) throw new Error(serviceError.message);
     if (!service || !service.is_active)
       return { bookingId: "", requiresPayment: false, error: "That session type is no longer available." };
+    if (service.requires_payment && !(await hasHadIntroCall(supabaseAdmin, context.userId))) {
+      return {
+        bookingId: "",
+        requiresPayment: false,
+        error: "Please book the free 15-minute intro call first — full sessions open up once that call has taken place.",
+      };
+    }
 
     const startsAt = new Date(data.startsAt);
     if (Number.isNaN(startsAt.getTime())) {
