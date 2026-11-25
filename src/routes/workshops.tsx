@@ -1,9 +1,13 @@
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { site } from "@/content/site";
+import { listWorkshops } from "@/lib/library.functions";
+
+const workshopsQuery = queryOptions({ queryKey: ["workshops"], queryFn: () => listWorkshops() });
 
 export const Route = createFileRoute("/workshops")({
   head: () => ({
@@ -16,10 +20,12 @@ export const Route = createFileRoute("/workshops")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(workshopsQuery),
   component: WorkshopsPage,
 });
 
 function WorkshopsPage() {
+  const { data } = useSuspenseQuery(workshopsQuery);
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -29,9 +35,9 @@ function WorkshopsPage() {
           {site.workshops.intro}
         </p>
         <div className="mt-12 grid gap-5 md:grid-cols-3">
-          {site.workshops.offerings.map((item) => (
+          {data.map((item) => (
             <article
-              key={item.title}
+              key={item.id}
               className="flex flex-col rounded-2xl border border-border bg-card p-7"
             >
               <h2 className="text-xl">{item.title}</h2>

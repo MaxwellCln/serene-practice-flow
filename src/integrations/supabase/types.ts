@@ -256,6 +256,39 @@ export type Database = {
         }
         Relationships: []
       }
+      resources: {
+        Row: {
+          author: string
+          created_at: string
+          group_title: string
+          id: string
+          note: string
+          sort_order: number
+          title: string
+          url: string | null
+        }
+        Insert: {
+          author?: string
+          created_at?: string
+          group_title: string
+          id?: string
+          note?: string
+          sort_order?: number
+          title: string
+          url?: string | null
+        }
+        Update: {
+          author?: string
+          created_at?: string
+          group_title?: string
+          id?: string
+          note?: string
+          sort_order?: number
+          title?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
       services: {
         Row: {
           created_at: string
@@ -343,6 +376,33 @@ export type Database = {
           start_time?: string
           updated_at?: string
           weekday?: number
+        }
+        Relationships: []
+      }
+      workshops: {
+        Row: {
+          body: string
+          created_at: string
+          format: string
+          id: string
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          format?: string
+          id?: string
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          format?: string
+          id?: string
+          sort_order?: number
+          title?: string
         }
         Relationships: []
       }

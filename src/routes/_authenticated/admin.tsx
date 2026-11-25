@@ -45,6 +45,7 @@ import {
 } from "@/lib/admin-invite.functions";
 import { listAvailability } from "@/lib/booking.functions";
 import { BlogManager } from "@/components/blog-manager";
+import { ResourcesManager, WorkshopsManager } from "@/components/library-manager";
 import { Badge } from "@/components/ui/badge";
 import {
   formatMoney,
@@ -257,6 +258,8 @@ function AdminPage() {
             <SelectItem value="bookings">All bookings</SelectItem>
             <SelectItem value="week">The week ahead</SelectItem>
             <SelectItem value="posts">Blog & vlog posts</SelectItem>
+            <SelectItem value="resources">Books & resources</SelectItem>
+            <SelectItem value="workshops">Workshops</SelectItem>
             <SelectItem value="pattern">Usual weekly pattern</SelectItem>
             <SelectItem value="services">Session types</SelectItem>
             <SelectItem value="time-off">Time off</SelectItem>
@@ -485,6 +488,8 @@ function AdminPage() {
       <WeekAheadEditor isAdmin={isAdmin} />
 
       <div id="admin-posts" className="scroll-mt-48"><BlogManager /></div>
+      <div id="admin-resources" className="scroll-mt-48"><ResourcesManager /></div>
+      <div id="admin-workshops" className="scroll-mt-48"><WorkshopsManager /></div>
 
       <WeeklyPatternEditor isAdmin={isAdmin} />
 

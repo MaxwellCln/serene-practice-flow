@@ -8,6 +8,13 @@
       "when": 1795365271208,
       "tag": "0000_restrict_availability_reads",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795615867249,
+      "tag": "0001_resources_workshops",
+      "breakpoints": true
     }
   ]
 }

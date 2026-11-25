@@ -1,8 +1,12 @@
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { site } from "@/content/site";
+import { listResources } from "@/lib/library.functions";
+
+const resourcesQuery = queryOptions({ queryKey: ["resources"], queryFn: () => listResources() });
 
 export const Route = createFileRoute("/resources")({
   head: () => ({
@@ -15,10 +19,18 @@ export const Route = createFileRoute("/resources")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(resourcesQuery),
   component: ResourcesPage,
 });
 
 function ResourcesPage() {
+  const { data } = useSuspenseQuery(resourcesQuery);
+  const groups: { title: string; items: typeof data }[] = [];
+  for (const r of data) {
+    let g = groups.find((x) => x.title === r.groupTitle);
+    if (!g) groups.push((g = { title: r.groupTitle, items: [] }));
+    g.items.push(r);
+  }
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -28,7 +40,7 @@ function ResourcesPage() {
           {site.resources.intro}
         </p>
         <div className="mt-12 space-y-12">
-          {site.resources.groups.map((group) => (
+          {groups.map((group) => (
             <section key={group.title}>
               <h2 className="font-display text-sm tracking-widest text-muted-foreground uppercase">
                 {group.title}
@@ -36,10 +48,18 @@ function ResourcesPage() {
               <ul className="mt-5 grid gap-4 md:grid-cols-2">
                 {group.items.map((item) => (
                   <li
-                    key={item.title}
+                    key={item.id}
                     className="rounded-2xl border border-border bg-card p-6"
                   >
-                    <p className="text-lg">{item.title}</p>
+                    <p className="text-lg">
+                      {item.url ? (
+                        <a href={item.url} target="_blank" rel="noopener noreferrer" className="underline-offset-4 hover:underline">
+                          {item.title}
+                        </a>
+                      ) : (
+                        item.title
+                      )}
+                    </p>
                     <p className="mt-1 text-sm text-accent">{item.author}</p>
                     <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                       {item.note}
