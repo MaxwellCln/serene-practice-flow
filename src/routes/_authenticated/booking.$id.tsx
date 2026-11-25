@@ -64,6 +64,7 @@ function BookingConfirmation() {
   const paid = booking.paymentStatus === "paid";
   const notRequired = booking.paymentStatus === "not_required";
   const awaitingPayment = !paid && !notRequired;
+  const requested = booking.status === "requested";
 
   return (
     <div className="min-h-screen bg-background">
@@ -73,10 +74,12 @@ function BookingConfirmation() {
           <BrandMark size="sm" className="mb-6" />
           <CalendarCheck className="h-8 w-8 text-primary" aria-hidden />
           <h1 className="mt-5 text-3xl">
-            {awaitingPayment && cancelled ? "Your slot is held" : "You're booked in"}
+            {requested ? "Intro call requested" : awaitingPayment && cancelled ? "Your slot is held" : "You're booked in"}
           </h1>
           <p className="mt-3 text-muted-foreground">
-            {paid || notRequired
+            {requested
+              ? "Thank you. Valerie will text you on WhatsApp to arrange a time for your free 15-minute call."
+              : paid || notRequired
               ? "Your session is confirmed. The details are below and in your account."
               : "Your slot is reserved. Payment will be arranged with you before the session."}
           </p>
@@ -89,8 +92,14 @@ function BookingConfirmation() {
             <div className="flex justify-between gap-4">
               <dt className="text-muted-foreground">When</dt>
               <dd className="text-right">
-                {formatPracticeDate(booking.startsAt)}, {formatPracticeTime(booking.startsAt)} (
-                {site.availability.timezoneLabel})
+                {requested ? (
+                  "Arranged with you over WhatsApp"
+                ) : (
+                  <>
+                    {formatPracticeDate(booking.startsAt)}, {formatPracticeTime(booking.startsAt)} (
+                    {site.availability.timezoneLabel})
+                  </>
+                )}
               </dd>
             </div>
             <div className="flex justify-between gap-4">
@@ -115,19 +124,19 @@ function BookingConfirmation() {
             </div>
           </dl>
 
-          <p className="mt-8 text-sm text-muted-foreground">
+          {!requested && <p className="mt-8 text-sm text-muted-foreground">
             You can reschedule or cancel from{" "}
             <Link to="/account" className="underline">
               your account
             </Link>{" "}
             up to 24 hours before your session.
-          </p>
+          </p>}
           <p className="mt-3 text-sm text-muted-foreground">
-            Closer than that, or need something else? Email{" "}
+            {requested ? "Need anything else? Email" : "Closer than that, or need something else? Email"}{" "}
             <a className="underline" href={`mailto:${site.email}`}>
               {site.email}
             </a>{" "}
-            or call {site.phone}. Free cancellation up to 24 hours before.
+            or call {site.phone}.{requested ? "" : " Free cancellation up to 24 hours before."}
           </p>
 
           <Button asChild variant="secondary" className="mt-8 rounded-full">

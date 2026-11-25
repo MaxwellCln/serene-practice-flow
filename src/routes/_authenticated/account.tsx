@@ -213,8 +213,9 @@ function AccountPage() {
                     </span>
                   </div>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    {formatPracticeDate(b.startsAt)}, {formatPracticeTime(b.startsAt)} ·{" "}
-                    {b.durationMinutes} minutes · {b.status}
+                    {b.status === "requested"
+                      ? "Requested · Valerie will text you on WhatsApp to arrange a time"
+                      : `${formatPracticeDate(b.startsAt)}, ${formatPracticeTime(b.startsAt)} · ${b.durationMinutes} minutes · ${b.status}`}
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Button asChild size="sm" variant="secondary" className="rounded-full">

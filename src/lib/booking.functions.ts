@@ -127,7 +127,7 @@ export const listAvailability = createServerFn({ method: "GET" }).handler(
 
 const bookingInput = z.object({
   serviceId: z.string().uuid(),
-  startsAt: z.string().min(1),
+  startsAt: z.string().optional(),
   name: z.string().trim().min(2).max(100),
   email: z.string().trim().email().max(255),
   phone: z.string().trim().regex(/^\+?[0-9\s()-]{7,40}$/, "Please enter a valid phone number"),
@@ -153,18 +153,25 @@ export type CreateBookingResult = {
   emailSent?: boolean;
 };
 
-/** Paid sessions unlock once the client has had a free intro call (its start time has passed)
- * or has already had a paid session before. */
+/** The free intro call is a request, not a time slot: Valerie arranges it over WhatsApp. */
+export function isIntroService(service: { requires_payment: boolean; duration_minutes: number }) {
+  return !service.requires_payment && service.duration_minutes <= 15;
+}
+
+/** Paid sessions unlock once Valerie marks an intro call as completed, or the client has
+ * already had a (non-request) session whose time has passed. */
 async function hasHadIntroCall(admin: any, userId: string): Promise<boolean> {
-  const { data, error } = await admin
-    .from("bookings")
-    .select("id")
-    .eq("user_id", userId)
-    .neq("status", "cancelled")
-    .lte("starts_at", new Date().toISOString())
-    .limit(20);
+  const { data: done, error } = await admin
+    .from("bookings").select("id").eq("user_id", userId)
+    .eq("precall_status", "completed").neq("status", "cancelled").limit(1);
   if (error) throw new Error(error.message);
-  return (data ?? []).length > 0;
+  if ((done ?? []).length > 0) return true;
+  const { data: past, error: pastError } = await admin
+    .from("bookings").select("id").eq("user_id", userId)
+    .not("status", "in", "(cancelled,requested)")
+    .lte("starts_at", new Date().toISOString()).limit(1);
+  if (pastError) throw new Error(pastError.message);
+  return (past ?? []).length > 0;
 }
 
 export const getMyBookingEligibility = createServerFn({ method: "GET" })
@@ -196,7 +203,39 @@ export const createBooking = createServerFn({ method: "POST" })
       };
     }
 
-    const startsAt = new Date(data.startsAt);
+    if (isIntroService(service)) {
+      const { data: open } = await supabaseAdmin
+        .from("bookings").select("id").eq("user_id", context.userId).eq("status", "requested")
+        .not("precall_status", "in", "(completed,rejected)").limit(1);
+      if (open && open.length > 0) {
+        return { bookingId: open[0]!.id as string, requiresPayment: false, emailSent: false };
+      }
+      const { data: req, error: reqError } = await supabaseAdmin
+        .from("bookings")
+        .insert({
+          service_id: service.id,
+          user_id: context.userId,
+          starts_at: new Date().toISOString(),
+          duration_minutes: service.duration_minutes,
+          client_name: data.name,
+          client_email: data.email,
+          client_phone: data.phone || null,
+          notes: data.notes || null,
+          status: "requested",
+          payment_status: "not_required",
+          precall_status: "needs_contact",
+          amount_cents: 0,
+          currency: service.currency,
+        })
+        .select("id")
+        .single();
+      if (reqError) throw new Error(reqError.message);
+      await supabaseAdmin.from("profiles")
+        .update({ full_name: data.name, phone: data.phone || null }).eq("id", context.userId);
+      return { bookingId: req.id as string, requiresPayment: false, emailSent: false };
+    }
+
+    const startsAt = new Date(data.startsAt ?? "");
     if (Number.isNaN(startsAt.getTime())) {
       return { bookingId: "", requiresPayment: false, error: "That time slot is not valid." };
     }

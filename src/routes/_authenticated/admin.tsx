@@ -183,6 +183,9 @@ function AdminPage() {
   const services = data.data?.services ?? [];
   const blocks = data.data?.blocks ?? [];
   const now = new Date();
+  const introRequests = bookings.filter(
+    (b) => b.status === "requested" && b.precallStatus !== "completed" && b.precallStatus !== "rejected",
+  );
   const upcoming = bookings.filter(
     (b) => new Date(b.startsAt) >= now && b.status !== "cancelled",
   );
@@ -275,6 +278,50 @@ function AdminPage() {
           For longer sessions, track the free 15-minute intro call Valerie arranges with the client
           over WhatsApp.
         </p>
+        <div className="mt-5 rounded-2xl border border-border bg-card p-5">
+          <p className="font-display text-lg">Free intro call requests</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            These don&apos;t use any of your time slots. Text the client on WhatsApp to arrange a
+            time. Marking a call as completed unlocks full sessions for that client.
+          </p>
+          {introRequests.length === 0 ? (
+            <p className="mt-3 text-sm text-muted-foreground">No open intro call requests.</p>
+          ) : (
+            <ul className="mt-3 grid gap-3">
+              {introRequests.map((b) => (
+                <li key={b.id} className="rounded-xl border border-border bg-background p-4">
+                  <p className="break-words text-sm">
+                    <span className="font-medium">{b.clientName}</span> ·{" "}
+                    {b.clientPhone ? (
+                      <a className="underline" href={`https://wa.me/${b.clientPhone.replace(/[^0-9]/g, "")}`} target="_blank" rel="noreferrer">
+                        {b.clientPhone} (WhatsApp)
+                      </a>
+                    ) : "no phone"}{" "}
+                    · <a className="underline" href={`mailto:${b.clientEmail}`}>{b.clientEmail}</a>
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">Requested {formatPracticeDate(b.startsAt)}</p>
+                  <Select
+                    value={b.precallStatus === "none" ? "needs_contact" : b.precallStatus}
+                    onValueChange={async (value) => {
+                      await patchPrecall({ data: { id: b.id, precallStatus: value as never } });
+                      toast.success("Intro call updated");
+                      refresh();
+                    }}
+                  >
+                    <SelectTrigger className="mt-3 w-64 rounded-full" aria-label="Intro call status">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {precallStatuses.map((s) => (
+                        <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
         {data.isLoading || availability.isLoading ? (
           <p className="mt-4 text-sm text-muted-foreground">Loading…</p>
         ) : scheduleDays.length === 0 ? (

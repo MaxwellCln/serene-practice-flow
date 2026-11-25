@@ -86,11 +86,12 @@ function BookPage() {
     return found && found.requires_payment && !paidUnlocked ? null : found;
   }, [services, serviceId, paidUnlocked]);
   const day = availability.find((d) => d.date === activeDate) ?? availability[0];
-  const step = !service ? 1 : !slot ? 2 : 3;
+  const isIntro = !!service && !service.requires_payment && service.duration_minutes <= 15;
+  const step = !service ? 1 : !slot && !isIntro ? 2 : 3;
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (!service || !slot) return;
+    if (!service || (!slot && !isIntro)) return;
     const parsed = detailsSchema.safeParse(form);
     if (!parsed.success) {
       const fieldErrors: Record<string, string> = {};
@@ -104,7 +105,7 @@ function BookPage() {
       const result = await submitBooking({
         data: {
           serviceId: service.id,
-          startsAt: slot,
+          ...(slot && !isIntro ? { startsAt: slot } : {}),
           name: parsed.data.name,
           email: parsed.data.email,
           phone: parsed.data.phone ?? "",
@@ -127,7 +128,7 @@ function BookPage() {
         }
         if (checkout.status === "error") toast.error(checkout.message);
       }
-      if (!result.emailSent) {
+      if (!result.emailSent && !isIntro) {
         toast.message(
           "Email confirmations aren't switched on yet — your details are on the next page.",
         );
@@ -240,7 +241,14 @@ function BookPage() {
         </section>
 
         {/* Step 2 — time */}
-        {service && (
+        {service && isIntro && (
+          <p className="mt-6 rounded-2xl border border-primary/30 bg-secondary p-4 text-sm leading-relaxed">
+            No need to pick a time. Leave your details below and Valerie will text you on WhatsApp
+            to arrange a time for the call.
+          </p>
+        )}
+
+        {service && !isIntro && (
           <section className="mt-12">
             <h2 className="text-2xl">Pick a time</h2>
             {availability.length === 0 ? (
@@ -289,7 +297,7 @@ function BookPage() {
         )}
 
         {/* Step 3 — details */}
-        {service && slot && !session && !sessionLoading && (
+        {service && (slot || isIntro) && !session && !sessionLoading && (
           <section className="mt-12 rounded-3xl border border-border bg-card p-8">
             <h2 className="text-2xl">Sign in to confirm</h2>
             <p className="mt-3 text-muted-foreground">
@@ -311,12 +319,14 @@ function BookPage() {
           </section>
         )}
 
-        {service && slot && session && (
+        {service && (slot || isIntro) && session && (
           <section className="mt-12">
             <h2 className="text-2xl">Your details</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              {service.title} · {formatPracticeDate(slot)} ·{" "}
-              {day?.slots.find((s) => s.iso === slot)?.time} ·{" "}
+              {service.title} ·{" "}
+              {slot && !isIntro
+                ? `${formatPracticeDate(slot)} · ${day?.slots.find((s) => s.iso === slot)?.time ?? ""} · `
+                : "Time arranged on WhatsApp · "}
               {service.price_cents === 0 ? "Free" : formatMoney(service.price_cents, service.currency)}
             </p>
             <form onSubmit={handleSubmit} className="mt-6 grid gap-5">
@@ -368,7 +378,9 @@ function BookPage() {
                 {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />}
                 {service.requires_payment
                   ? `Continue to payment · ${formatMoney(service.price_cents, service.currency)}`
-                  : "Confirm booking"}
+                  : isIntro
+                    ? "Request my free call"
+                    : "Confirm booking"}
               </Button>
               <p className="text-xs text-muted-foreground">
                 {site.servicesSection.note} Your details are stored securely and never shared.
