@@ -467,7 +467,8 @@ export const rescheduleMyBooking = createServerFn({ method: "POST" })
     // The new time must be part of the standing pattern or a one-off opening.
     const dateKey = practiceDateKey(next);
     const weekday = new Date(`${dateKey}T12:00:00Z`).getUTCDay();
-    const weekly = await weeklyTimes(context.supabase);
+    const { supabaseAdmin: weeklyClient } = await import("@/integrations/supabase/client.server");
+    const weekly = await weeklyTimes(weeklyClient);
     const isScheduled = weekly.some(
       (entry) => entry.weekday === weekday &&
         practiceTimeToUtc(dateKey, clockTime(entry.start_time)).getTime() === next.getTime(),

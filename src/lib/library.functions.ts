@@ -1,9 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
-import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { Database } from "@/integrations/supabase/types";
 
 export type Resource = {
   id: string;
@@ -16,23 +14,9 @@ export type Resource = {
 };
 export type Workshop = { id: string; title: string; format: string; body: string; sortOrder: number };
 
-function publicClient() {
-  const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
-  return createClient<Database>(process.env["SUPABASE_URL"]!, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: {
-      fetch: (input, init) => {
-        const h = new Headers(init?.headers);
-        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
-        h.set("apikey", key);
-        return fetch(input, { ...init, headers: h });
-      },
-    },
-  });
-}
-
 export const listResources = createServerFn({ method: "GET" }).handler(async (): Promise<Resource[]> => {
-  const { data, error } = await publicClient()
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
     .from("resources")
     .select("id, group_title, title, author, note, url, sort_order")
     .order("sort_order")
@@ -50,7 +34,8 @@ export const listResources = createServerFn({ method: "GET" }).handler(async ():
 });
 
 export const listWorkshops = createServerFn({ method: "GET" }).handler(async (): Promise<Workshop[]> => {
-  const { data, error } = await publicClient()
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
     .from("workshops")
     .select("id, title, format, body, sort_order")
     .order("sort_order")

@@ -15,6 +15,13 @@
       "when": 1795615867249,
       "tag": "0001_resources_workshops",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795616005935,
+      "tag": "0002_lock_public_reads",
+      "breakpoints": true
     }
   ]
 }
