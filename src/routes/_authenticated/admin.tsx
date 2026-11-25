@@ -211,6 +211,102 @@ function AdminPage() {
   }
   const scheduleDays = [...dayMap.entries()].sort(([a], [b]) => a.localeCompare(b)).slice(0, 14);
 
+  const nowMs = Date.now();
+  const isArchived = (b: (typeof bookings)[number]) =>
+    new Date(b.startsAt).getTime() < nowMs &&
+    (b.paymentStatus === "paid" || b.status === "cancelled");
+  const activeBookings = bookings.filter((b) => !isArchived(b));
+  const archivedBookings = bookings.filter(isArchived);
+  const renderBooking = (b: (typeof bookings)[number]) => (
+              <li key={b.id} className="rounded-2xl border border-border bg-card p-5">
+                <div className="flex flex-wrap items-baseline justify-between gap-3">
+                  <span className="font-display text-lg">
+                    {formatPracticeDate(b.startsAt)}, {formatPracticeTime(b.startsAt)}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    {b.serviceTitle} · {b.durationMinutes} min ·{" "}
+                    {formatMoney(b.amountCents, b.currency)}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm">
+                  {b.clientName} ·{" "}
+                  <a className="underline" href={`mailto:${b.clientEmail}`}>
+                    {b.clientEmail}
+                  </a>
+                  {b.clientPhone ? ` · ${b.clientPhone}` : ""}
+                </p>
+                {b.notes && (
+                  <p className="mt-3 border-l-2 border-border pl-3 text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">Shared for this booking:</span> {b.notes}
+                  </p>
+                )}
+                <div className="mt-4 flex flex-wrap items-end gap-3">
+                  <div className="grid gap-1">
+                    <span className="text-xs text-muted-foreground">Booking status</span>
+                  <Select
+                    value={b.status}
+                    onValueChange={async (value) => {
+                      await patchBooking({ data: { id: b.id, status: value as never } });
+                      refresh();
+                    }}
+                  >
+                    <SelectTrigger className="w-44 rounded-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statuses.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  </div>
+                  <div className="grid gap-1">
+                    <span className="text-xs text-muted-foreground">Payment</span>
+                  <Select
+                    value={b.paymentStatus}
+                    onValueChange={async (value) => {
+                      await patchBooking({ data: { id: b.id, paymentStatus: value as never } });
+                      refresh();
+                    }}
+                  >
+                    <SelectTrigger className="w-52 rounded-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {paymentStatuses.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s.replace("_", " ")}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="rounded-full"
+                    disabled={invoiceBusyId === b.id}
+                    onClick={async () => {
+                      setInvoiceBusyId(b.id);
+                      try {
+                        const result = await sendInvoice({ data: { id: b.id } });
+                        if (result.ok) toast.success(`Invoice emailed to ${b.clientEmail}.`);
+                        else toast.error(result.error ?? "Couldn't send the invoice.");
+                      } catch {
+                        toast.error("Couldn't send the invoice.");
+                      } finally {
+                        setInvoiceBusyId(null);
+                      }
+                    }}
+                  >
+                    {invoiceBusyId === b.id ? "Sending…" : "Email invoice"}
+                  </Button>
+                </div>
+              </li>
+  );
+
   return (
     <Shell>
       <div className="rounded-3xl border border-border bg-secondary/40 p-6 sm:p-8">
@@ -435,100 +531,22 @@ function AdminPage() {
         </p>
         {data.isLoading ? (
           <p className="mt-4 text-sm text-muted-foreground">Loading…</p>
-        ) : bookings.length === 0 ? (
-          <p className="mt-4 text-sm text-muted-foreground">No bookings yet.</p>
+        ) : activeBookings.length === 0 ? (
+          <p className="mt-4 text-sm text-muted-foreground">No bookings to deal with right now.</p>
         ) : (
           <ul className="mt-5 grid gap-3">
-            {bookings.map((b) => (
-              <li key={b.id} className="rounded-2xl border border-border bg-card p-5">
-                <div className="flex flex-wrap items-baseline justify-between gap-3">
-                  <span className="font-display text-lg">
-                    {formatPracticeDate(b.startsAt)}, {formatPracticeTime(b.startsAt)}
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    {b.serviceTitle} · {b.durationMinutes} min ·{" "}
-                    {formatMoney(b.amountCents, b.currency)}
-                  </span>
-                </div>
-                <p className="mt-2 text-sm">
-                  {b.clientName} ·{" "}
-                  <a className="underline" href={`mailto:${b.clientEmail}`}>
-                    {b.clientEmail}
-                  </a>
-                  {b.clientPhone ? ` · ${b.clientPhone}` : ""}
-                </p>
-                {b.notes && (
-                  <p className="mt-3 border-l-2 border-border pl-3 text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground">Shared for this booking:</span> {b.notes}
-                  </p>
-                )}
-                <div className="mt-4 flex flex-wrap items-end gap-3">
-                  <div className="grid gap-1">
-                    <span className="text-xs text-muted-foreground">Booking status</span>
-                  <Select
-                    value={b.status}
-                    onValueChange={async (value) => {
-                      await patchBooking({ data: { id: b.id, status: value as never } });
-                      refresh();
-                    }}
-                  >
-                    <SelectTrigger className="w-44 rounded-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statuses.map((s) => (
-                        <SelectItem key={s} value={s}>
-                          {s}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  </div>
-                  <div className="grid gap-1">
-                    <span className="text-xs text-muted-foreground">Payment</span>
-                  <Select
-                    value={b.paymentStatus}
-                    onValueChange={async (value) => {
-                      await patchBooking({ data: { id: b.id, paymentStatus: value as never } });
-                      refresh();
-                    }}
-                  >
-                    <SelectTrigger className="w-52 rounded-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {paymentStatuses.map((s) => (
-                        <SelectItem key={s} value={s}>
-                          {s.replace("_", " ")}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="rounded-full"
-                    disabled={invoiceBusyId === b.id}
-                    onClick={async () => {
-                      setInvoiceBusyId(b.id);
-                      try {
-                        const result = await sendInvoice({ data: { id: b.id } });
-                        if (result.ok) toast.success(`Invoice emailed to ${b.clientEmail}.`);
-                        else toast.error(result.error ?? "Couldn't send the invoice.");
-                      } catch {
-                        toast.error("Couldn't send the invoice.");
-                      } finally {
-                        setInvoiceBusyId(null);
-                      }
-                    }}
-                  >
-                    {invoiceBusyId === b.id ? "Sending…" : "Email invoice"}
-                  </Button>
-                </div>
-              </li>
-            ))}
+            {activeBookings.map(renderBooking)}
           </ul>
+        )}
+        {archivedBookings.length > 0 && (
+          <details className="mt-6 rounded-2xl border border-border bg-muted/40 p-4">
+            <summary className="cursor-pointer text-sm font-medium">
+              Archived bookings ({archivedBookings.length}) — past sessions that are paid or cancelled
+            </summary>
+            <ul className="mt-4 grid gap-3">
+              {archivedBookings.map(renderBooking)}
+            </ul>
+          </details>
         )}
       </section>
 
